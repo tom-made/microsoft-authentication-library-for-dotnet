@@ -35,7 +35,7 @@ namespace Microsoft.Identity.Client.Internal
 
         public Logger Logger { get; set; }
 
-        public string TelemetryRequestId { get; set; }
+        public Telemetry.TelemetryRequestContext TelemetryRequestId { get; set; }
 
         public RequestContext(Guid correlationId, string component)
         {

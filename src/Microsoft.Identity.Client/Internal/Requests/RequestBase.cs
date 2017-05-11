@@ -118,7 +118,7 @@ namespace Microsoft.Identity.Client.Internal.Requests
                 ValidationStatus = AuthenticationRequestParameters.ValidateAuthority.ToString(),
                 UserId = AuthenticationRequestParameters.User != null ? AuthenticationRequestParameters.User.Identifier : "",
                 CorrelationId = AuthenticationRequestParameters.RequestContext.CorrelationId,
-                RequestId = AuthenticationRequestParameters.RequestContext.TelemetryRequestId,
+                RequestId = Guid.NewGuid().ToString(),
                 IsConfidentialClient = IsConfidentialClient,
                 UiBehavior = GetUIBehaviorPromptValue(),
                 WasSuccessful = false

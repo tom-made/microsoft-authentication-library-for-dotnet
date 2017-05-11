@@ -96,20 +96,20 @@ namespace Test.MSAL.NET.Unit
             telemetry.RegisterReceiver(myReceiver.OnEvents);
 
             telemetry.ClientId = "a1b3c3d4";
-            var reqId = telemetry.CreateRequestContext();
+            var reqId = telemetry.GenerateNewRequestId();
             try
             {
                 var e1 = new ApiEvent() {Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad"};
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = true;
-                telemetry.StopEvent(e1);
+                telemetry.StopEvent(reqId, e1);
 
                 var e2 = new HttpEvent() {HttpPath = new Uri("https://contoso.com"), UserAgent = "SomeUserAgent", QueryParams = "?a=1&b=2"};
                 telemetry.StartEvent(reqId, e2);
                 // do some stuff...
                 e2.HttpResponseStatus = 200;
-                telemetry.StopEvent(e2);
+                telemetry.StopEvent(reqId, e2);
             }
             finally
             {
@@ -127,18 +127,18 @@ namespace Test.MSAL.NET.Unit
             var myReceiver = new MyReceiver();
             telemetry.RegisterReceiver(myReceiver.OnEvents);
 
-            var reqId = telemetry.CreateRequestContext();
+            var reqId = telemetry.GenerateNewRequestId();
             try
             {
                 var e1 = new ApiEvent() { Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad" };
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = true;
-                telemetry.StopEvent(e1);
+                telemetry.StopEvent(reqId, e1);
 
                 var e2 = new UiEvent() { UserCancelled = false };
                 telemetry.StartEvent(reqId, e2);
-                telemetry.StopEvent(e2);
+                telemetry.StopEvent(reqId, e2);
             }
             finally
             {
@@ -146,18 +146,18 @@ namespace Test.MSAL.NET.Unit
             }
             Assert.AreEqual(0, myReceiver.EventsReceived.Count);
 
-            reqId = telemetry.CreateRequestContext();
+            reqId = telemetry.GenerateNewRequestId();
             try
             {
                 var e1 = new ApiEvent() { Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad" };
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = false;  // mimic an unsuccessful event, so that this batch should be dispatched
-                telemetry.StopEvent(e1);
+                telemetry.StopEvent(reqId, e1);
 
                 var e2 = new UiEvent() { UserCancelled = true };
                 telemetry.StartEvent(reqId, e2);
-                telemetry.StopEvent(e2);
+                telemetry.StopEvent(reqId, e2);
             }
             finally
             {
@@ -192,12 +192,12 @@ namespace Test.MSAL.NET.Unit
             Telemetry telemetry = new Telemetry() { ClientId = "a1b2c3d4" };  // To isolate the test environment, we do not use a singleton here
             var myReceiver = new MyReceiver();
             telemetry.RegisterReceiver(myReceiver.OnEvents);
-            var reqId = telemetry.CreateRequestContext();
+            var reqId = telemetry.GenerateNewRequestId();
             try
             {
                 var anEvent = new UiEvent();
                 telemetry.StartEvent(reqId, anEvent);
-                telemetry.StopEvent(anEvent);
+                telemetry.StopEvent(reqId, anEvent);
             }
             finally
             {
@@ -208,6 +208,7 @@ namespace Test.MSAL.NET.Unit
             Assert.AreNotEqual(myReceiver.EventsReceived[1][EventBase.ElapsedTimeKey], "-1");
         }
 
+        /*
         [TestMethod]
         [TestCategory("TelemetryInternalAPI")]
         // This test case is no longer needed, because the new implementation does not use 2 global dictionaries,
@@ -272,6 +273,7 @@ namespace Test.MSAL.NET.Unit
                 anEvent[EventBase.EventNameKey].EndsWith("ui_event")));
         }
 
+
         // The new implementation also addresses a potential issue in the previous implementation.
         // Previously, events-in-progress are stored in a global dictionary, and will only be cleaned up when Flush() is called.
         // If a future maintainer forgets to call Flush() in a certain code path, that would cause memory leak.
@@ -279,5 +281,7 @@ namespace Test.MSAL.NET.Unit
         // The new implementation always stores events in a per-request local variable,
         // so even if Flush() will not be called, those unprocessed events will naturally be cleaned up when the request ends.
         // There won't be any memory leak.
+
+        */
     }
 }
