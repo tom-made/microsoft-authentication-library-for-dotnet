@@ -127,18 +127,18 @@ namespace Test.MSAL.NET.Unit
             var myReceiver = new MyReceiver();
             telemetry.RegisterReceiver(myReceiver.OnEvents);
 
-            var reqId = telemetry.GenerateNewRequestId();
+            var reqId = telemetry.CreateRequestContext();
             try
             {
                 var e1 = new ApiEvent() { Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad" };
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = true;
-                telemetry.StopEvent(reqId, e1);
+                telemetry.StopEvent(e1);
 
                 var e2 = new UiEvent() { UserCancelled = false };
                 telemetry.StartEvent(reqId, e2);
-                telemetry.StopEvent(reqId, e2);
+                telemetry.StopEvent(e2);
             }
             finally
             {
@@ -146,18 +146,18 @@ namespace Test.MSAL.NET.Unit
             }
             Assert.AreEqual(0, myReceiver.EventsReceived.Count);
 
-            reqId = telemetry.GenerateNewRequestId();
+            reqId = telemetry.CreateRequestContext();
             try
             {
                 var e1 = new ApiEvent() { Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad" };
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = false;  // mimic an unsuccessful event, so that this batch should be dispatched
-                telemetry.StopEvent(reqId, e1);
+                telemetry.StopEvent(e1);
 
                 var e2 = new UiEvent() { UserCancelled = true };
                 telemetry.StartEvent(reqId, e2);
-                telemetry.StopEvent(reqId, e2);
+                telemetry.StopEvent(e2);
             }
             finally
             {
@@ -192,12 +192,12 @@ namespace Test.MSAL.NET.Unit
             Telemetry telemetry = new Telemetry() { ClientId = "a1b2c3d4" };  // To isolate the test environment, we do not use a singleton here
             var myReceiver = new MyReceiver();
             telemetry.RegisterReceiver(myReceiver.OnEvents);
-            var reqId = telemetry.GenerateNewRequestId();
+            var reqId = telemetry.CreateRequestContext();
             try
             {
                 var anEvent = new UiEvent();
                 telemetry.StartEvent(reqId, anEvent);
-                telemetry.StopEvent(reqId, anEvent);
+                telemetry.StopEvent(anEvent);
             }
             finally
             {
@@ -210,6 +210,8 @@ namespace Test.MSAL.NET.Unit
 
         [TestMethod]
         [TestCategory("TelemetryInternalAPI")]
+        // This test case is no longer needed, because the new implementation does not use 2 global dictionaries,
+        // so there would be no such thing as orphaned event.
         public void TelemetryStartAnEventWithoutStoppingItLater() // Such event(s) becomes an orphaned event
         {
             Telemetry telemetry = new Telemetry() { ClientId = "a1b2c3d4" };  // To isolate the test environment, we do not use a singleton here
@@ -242,6 +244,8 @@ namespace Test.MSAL.NET.Unit
         [TestMethod]
         [TestCategory("TelemetryInternalAPI")]
         public void TelemetryStopAnEventWithoutStartingItBeforehand()
+        // This test case is no longer needed. Because in the new implementation, an event is started when it is constructed,
+        // so by design, you won't be able to call an event's Stop() method without starting such event.
         {
             Telemetry telemetry = new Telemetry() { ClientId = "a1b2c3d4" };  // To isolate the test environment, we do not use a singleton here
             var myReceiver = new MyReceiver();
@@ -267,5 +271,13 @@ namespace Test.MSAL.NET.Unit
             Assert.IsNull(myReceiver.EventsReceived.Find(anEvent =>  // Expect NOT finding such an event
                 anEvent[EventBase.EventNameKey].EndsWith("ui_event")));
         }
+
+        // The new implementation also addresses a potential issue in the previous implementation.
+        // Previously, events-in-progress are stored in a global dictionary, and will only be cleaned up when Flush() is called.
+        // If a future maintainer forgets to call Flush() in a certain code path, that would cause memory leak.
+
+        // The new implementation always stores events in a per-request local variable,
+        // so even if Flush() will not be called, those unprocessed events will naturally be cleaned up when the request ends.
+        // There won't be any memory leak.
     }
 }
