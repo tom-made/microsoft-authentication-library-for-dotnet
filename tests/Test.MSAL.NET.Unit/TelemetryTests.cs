@@ -96,20 +96,20 @@ namespace Test.MSAL.NET.Unit
             telemetry.RegisterReceiver(myReceiver.OnEvents);
 
             telemetry.ClientId = "a1b3c3d4";
-            var reqId = telemetry.GenerateNewRequestId();
+            var reqId = telemetry.CreateRequestContext();
             try
             {
                 var e1 = new ApiEvent() {Authority = new Uri("https://login.microsoftonline.com"), AuthorityType = "Aad"};
                 telemetry.StartEvent(reqId, e1);
                 // do some stuff...
                 e1.WasSuccessful = true;
-                telemetry.StopEvent(reqId, e1);
+                telemetry.StopEvent(e1);
 
                 var e2 = new HttpEvent() {HttpPath = new Uri("https://contoso.com"), UserAgent = "SomeUserAgent", QueryParams = "?a=1&b=2"};
                 telemetry.StartEvent(reqId, e2);
                 // do some stuff...
                 e2.HttpResponseStatus = 200;
-                telemetry.StopEvent(reqId, e2);
+                telemetry.StopEvent(e2);
             }
             finally
             {

@@ -73,6 +73,7 @@ namespace Microsoft.Identity.Client
         /// </summary>
         public bool TelemetryOnFailureOnly { get; set; }
 
+
         internal ConcurrentDictionary<Tuple<string, string>, EventBase> EventsInProgress = new ConcurrentDictionary<Tuple<string, string>, EventBase>();
 
         internal ConcurrentDictionary<string, List<EventBase>> CompletedEvents = new ConcurrentDictionary<string, List<EventBase>>();
@@ -82,12 +83,36 @@ namespace Microsoft.Identity.Client
             return Guid.NewGuid().ToString();
         }
 
+        internal TelemetryRequestContext CreateRequestContext()
+        // Despite of a different method name, the usage pattern remains the same.
+        {
+            return new TelemetryRequestContext() { Receiver=_receiver, TelemetryOnFailureOnly=TelemetryOnFailureOnly, ClientId=ClientId };
+            // Note: This implementation does not use a plain string as RequestId,
+            // instead we return a class instance (which behaves mostly like an array, although caller doesn't need to know that).
+            // From telemetry caller's perspective, the usage pattern remains similar,
+            // because you will just need to keep the return value of this method,
+            // and include it in subsequent StartEvent(...) call, etc.
+        }
+
         internal void StartEvent(string requestId, EventBase eventToStart)
         {
             if (_receiver != null && requestId != null)
             {
                 EventsInProgress[new Tuple<string, string>(requestId, eventToStart[EventBase.EventNameKey])] = eventToStart;
             }
+        }
+
+        internal void StartEvent(TelemetryRequestContext context, EventBase eventToStart)
+        // Despite of a different input parameter type, the usage pattern remains the same.
+        {
+            context.Add(eventToStart);
+            /* There used to be a global dictionary EventsInProgress
+               (which was historically designed to keep track of event start time),
+               so the previous implementation here need to calculate a unique key name to be used in that dictionary.
+
+               Now, because this implementation stores events in a per-request context, rather than a global dictionary,
+               We simply add the event into the context (which behaves like an array here).
+             */
         }
 
         internal void StopEvent(string requestId, EventBase eventToStop)
@@ -137,6 +162,28 @@ namespace Microsoft.Identity.Client
             EventsInProgress.TryRemove(eventKey, out dummy);
             // We could use the following one-liner instead, but we believe it is less readable:
             // ((IDictionary<Tuple<string, string>, EventBase>)EventsInProgress).Remove(eventKey);
+        }
+
+        internal void StopEvent(EventBase eventToStop)
+        // Previous implementation contains one more parameter, the RequestId,
+        // because it need to locate the event in EventsInProgress dictionary, and then move it into CompletedEvents dictionary.
+
+        // In this alternative implementation, we store the events in only 1 place, the per-request context.
+        // So we don't need to move anything here. We simply calls the event's own Stop() method.
+
+        // Also, simplified implementation prevents coding logic error.
+        // Previously we had lots of discussion for this topic during the previous implementation in PR 314.
+        // Now we can solve them, once and for all.
+        {
+            eventToStop.Stop();
+            /* At this point, we may consider further simplify this implementation by removing this helper completely,
+            because:
+                Telemetry.GetInstance().StopEvent(telemetryRequestId, apiEvent);
+            is not as concise as:
+                apiEvent.Stop();
+
+            Same applies to StartEvent() and Flush().
+             */
         }
 
         internal void Flush(string requestId)
@@ -202,6 +249,18 @@ namespace Microsoft.Identity.Client
                 }
             }
             return orphanedEvents;
+        }
+
+        internal void Flush(TelemetryRequestContext context)
+        // Despite of different parameter type, the usage pattern of this method remains the same.
+        {
+            context.Flush();
+            // While the actual logic has been moved into TelemetryRequestContext 's same name method,
+            // it is worth noting that its implementation has been simplified into 4 lines in total.
+            // That is mainly because, since all events are in one list, there is no such thing as orphaned event.
+            // So the implementation does not need to implement the logic to handle orphaned event,
+            // which was error-prone, and contained a unobvious bug (https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/pull/314#discussion_r111499906).
+            // The new approach avoids such problem, by design.
         }
 
         internal string ClientId { get; set; }
