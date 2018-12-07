@@ -35,6 +35,7 @@ using System.Linq;
 using Microsoft.Identity.Client.Instance;
 using Microsoft.Identity.Client.TelemetryCore;
 using System.Threading;
+using Microsoft.Identity.Client.Config;
 using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Exceptions;
 using Microsoft.Identity.Client.Utils;
@@ -71,42 +72,42 @@ namespace Microsoft.Identity.Client
             set => ServiceBundle.TelemetryManager.TelemetryReceiver = value;
         }
 
-        ///  <summary>
-        ///  Constructor of the base application
-        ///  </summary>
-        ///  <param name="clientId">Client ID (also known as <i>Application ID</i>) of the application as registered in the
-        ///  application registration portal (https://aka.ms/msal-net-register-app)</param>
-        ///  <param name="authority">URL of the security token service (STS) from which MSAL.NET will acquire the tokens.
-        /// 
-        ///  Usual authorities endpoints for the Azure public Cloud are:
-        ///  <list type="bullet">
-        ///  <item><description><c>https://login.microsoftonline.com/tenant/</c> where <c>tenant</c> is the tenant ID of the Azure AD tenant
-        ///  or a domain associated with this Azure AD tenant, in order to sign-in users of a specific organization only</description></item>
-        ///  <item><description><c>https://login.microsoftonline.com/common/</c> to sign-in users with any work and school accounts or Microsoft personal account</description></item>
-        ///  <item><description><c>https://login.microsoftonline.com/organizations/</c> to sign-in users with any work and school accounts</description></item>
-        ///  <item><description><c>https://login.microsoftonline.com/consumers/</c> to sign-in users with only personal Microsoft accounts (live)</description></item>
-        ///  </list>
-        ///  Note that this setting needs to be consistent with what is declared in the application registration portal
-        ///  </param>
-        ///  <param name="redirectUri">also named <i>Reply URI</i>, the redirect URI is the URI where the STS will call back the application with the security token. For details see https://aka.ms/msal-net-client-applications</param>
-        ///  <param name="validateAuthority">Boolean telling MSAL.NET if the authority needs to be verified against a list of known authorities.
-        ///  This should be set to <c>false</c> for Azure AD B2C authorities as those are customer specific (a list of known B2C authorities
-        ///  cannot be maintained by MSAL.NET</param>
-        /// <param name="serviceBundle"></param>
-        internal ClientApplicationBase(string clientId, string authority, string redirectUri,
-            bool validateAuthority, IServiceBundle serviceBundle)
-        {
-            ServiceBundle = serviceBundle ?? Core.ServiceBundle.CreateDefault();
+        /////  <summary>
+        /////  Constructor of the base application
+        /////  </summary>
+        /////  <param name="clientId">Client ID (also known as <i>Application ID</i>) of the application as registered in the
+        /////  application registration portal (https://aka.ms/msal-net-register-app)</param>
+        /////  <param name="authority">URL of the security token service (STS) from which MSAL.NET will acquire the tokens.
+        ///// 
+        /////  Usual authorities endpoints for the Azure public Cloud are:
+        /////  <list type="bullet">
+        /////  <item><description><c>https://login.microsoftonline.com/tenant/</c> where <c>tenant</c> is the tenant ID of the Azure AD tenant
+        /////  or a domain associated with this Azure AD tenant, in order to sign-in users of a specific organization only</description></item>
+        /////  <item><description><c>https://login.microsoftonline.com/common/</c> to sign-in users with any work and school accounts or Microsoft personal account</description></item>
+        /////  <item><description><c>https://login.microsoftonline.com/organizations/</c> to sign-in users with any work and school accounts</description></item>
+        /////  <item><description><c>https://login.microsoftonline.com/consumers/</c> to sign-in users with only personal Microsoft accounts (live)</description></item>
+        /////  </list>
+        /////  Note that this setting needs to be consistent with what is declared in the application registration portal
+        /////  </param>
+        /////  <param name="redirectUri">also named <i>Reply URI</i>, the redirect URI is the URI where the STS will call back the application with the security token. For details see https://aka.ms/msal-net-client-applications</param>
+        /////  <param name="validateAuthority">Boolean telling MSAL.NET if the authority needs to be verified against a list of known authorities.
+        /////  This should be set to <c>false</c> for Azure AD B2C authorities as those are customer specific (a list of known B2C authorities
+        /////  cannot be maintained by MSAL.NET</param>
+        ///// <param name="serviceBundle"></param>
 
-            ClientId = clientId;
-            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle, authority, validateAuthority);
-            Authority = authorityInstance.CanonicalAuthority;
-            RedirectUri = redirectUri;
-            ValidateAuthority = validateAuthority;
-            if (UserTokenCache != null)
-            {
-                UserTokenCache.ClientId = clientId;
-            }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="config"></param>
+        internal ClientApplicationBase(ApplicationConfiguration config)
+        {
+            ServiceBundle = Core.ServiceBundle.CreateDefault(config);
+
+            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle);
+            //if (UserTokenCache != null)
+            //{
+            //    UserTokenCache.ClientId = clientId;
+            //}
 
             RequestContext requestContext = new RequestContext(ClientId, new MsalLogger(Guid.Empty, null));
 
@@ -120,20 +121,20 @@ namespace Microsoft.Identity.Client
         /// Identifier of the component (libraries/SDK) consuming MSAL.NET.
         /// This will allow for disambiguation between MSAL usage by the app vs MSAL usage by component libraries.
         /// </summary>
-        public string Component { get; set; }
+        public string Component { get; set; }  // todo: have this only come in through config...
 
         /// <Summary>
         /// Gets the URL of the authority, or security token service (STS) from which MSAL.NET will acquire security tokens
         /// The return value of this property is either the value provided by the developer in the constructor of the application, or otherwise
         /// the value of the <see cref="DefaultAuthority"/> static member (that is <c>https://login.microsoftonline.com/common/</c>)
         /// </Summary>
-        public string Authority { get; }
+        public string Authority => ServiceBundle.Config.DefaultAuthorityInfo.CanonicalAuthority;
 
         /// <summary>
         /// Gets the Client ID (also known as <i>Application ID</i>) of the application as registered in the application registration portal (https://aka.ms/msal-net-register-app)
         /// and as passed in the constructor of the application
         /// </summary>
-        public string ClientId { get; }
+        public string ClientId => ServiceBundle.Config.ClientId;
 
 #pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
         /// <summary>
@@ -151,7 +152,7 @@ namespace Microsoft.Identity.Client
         /// </summary>
         /// <remarks>This is especially important when you deploy an application that you have initially tested locally;
         /// you then need to add the reply URL of the deployed application in the application registration portal</remarks>
-        public string RedirectUri { get; set; }
+        public string RedirectUri => ServiceBundle.Config.RedirectUri;
 #pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
 
         /// <summary>
@@ -160,7 +161,7 @@ namespace Microsoft.Identity.Client
         /// Unless requested otherwise by Microsoft support, this parameter should not be set by application developers as it may have adverse effect on the application.
         /// This property is also concatenated to the <c>extraQueryParameter</c> parameters of token acquisition operations.
         /// </summary>
-        public string SliceParameters { get; set; }
+        public string SliceParameters => ServiceBundle.Config.SliceParameters;
 
         /// <Summary>
         /// Token Cache instance for storing User tokens.
@@ -185,13 +186,13 @@ namespace Microsoft.Identity.Client
         /// (a list of known B2C authorities cannot be maintained by MSAL.NET). This property can be set just after the construction of the application
         /// and before an operation acquiring a token or interacting with the STS.
         /// </summary>
-        public bool ValidateAuthority { get; set; }
+        public bool ValidateAuthority => ServiceBundle.Config.DefaultAuthorityInfo.ValidateAuthority;
 
         /// <summary>
         /// ExtendedLifeTimeEnabled is a Boolean that first party applications (read Office) can set to true in case when the STS has an outage,
         /// to be more resilient.
         /// </summary>
-        private bool ExtendedLifeTimeEnabled { get; set; }
+        private bool ExtendedLifeTimeEnabled => ServiceBundle.Config.IsExtendedTokenLifetimeEnabled;
 
         /// <summary>
         /// Returns all the available <see cref="IAccount">accounts</see> in the user token cache for the application.
@@ -302,7 +303,7 @@ namespace Microsoft.Identity.Client
 
         internal Authority GetAuthority(IAccount account)
         {
-            var authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            var authority = Instance.Authority.CreateAuthority(ServiceBundle);
             var tenantId = authority.GetTenantId();
 
             if (Instance.Authority.TenantlessTenantNames.Contains(tenantId)
@@ -342,16 +343,14 @@ namespace Microsoft.Identity.Client
         {
             return new AuthenticationRequestParameters
             {
-                SliceParameters = SliceParameters,
+                SliceParameters = ServiceBundle.Config.SliceParameters,  // TODO: can users reference this instead of being in authparams?
                 Authority = authority,
-                ClientId = ClientId,
+                ClientId = ServiceBundle.Config.ClientId,
                 TokenCache = cache,
                 Account = account,
                 Scope = ScopeHelper.CreateSortedSetFromEnumerable(scopes),
                 RedirectUri = new Uri(RedirectUri),
                 RequestContext = CreateRequestContext(Guid.Empty),
-                ValidateAuthority = ValidateAuthority,
-                IsExtendedLifeTimeEnabled = ExtendedLifeTimeEnabled
             };
         }
 

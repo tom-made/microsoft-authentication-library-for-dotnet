@@ -1,20 +1,20 @@
-﻿//------------------------------------------------------------------------------
-//
+﻿// ------------------------------------------------------------------------------
+// 
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
-//
+// 
 // This code is licensed under the MIT License.
-//
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files(the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions :
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
@@ -22,36 +22,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
-//------------------------------------------------------------------------------
+// 
+// ------------------------------------------------------------------------------
 
-using System.Net.Http;
-using System.Net.Http.Headers;
-using Microsoft.Identity.Client.Config;
-
-namespace Microsoft.Identity.Client.Http
+namespace Microsoft.Identity.Client.Config
 {
-    internal class HttpClientFactory : IMsalHttpClientFactory
+    /// <summary>
+    /// </summary>
+    public enum AadAuthorityAudience
     {
-        // The HttpClient is a singleton per ClientApplication so that we don't have a process wide singleton.
-        public const long MaxResponseContentBufferSizeInBytes = 1024*1024;
+        /// <summary>
+        /// </summary>
+        None,
 
-        private readonly HttpClient _httpClient;
+        /// <summary>
+        ///     Default is AzureAdOnly ?? TODO: WHAT SHOULD THE DEFAULT BE
+        /// </summary>
+        Default,
 
-        public HttpClientFactory()
-        {
-            _httpClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true })
-            {
-                MaxResponseContentBufferSize = MaxResponseContentBufferSizeInBytes
-            };
+        /// <summary>
+        ///     Maps to https://login.microsoftonline.com/common/
+        /// </summary>
+        AzureAdAndPersonalMicrosoftAccount,
 
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        }
+        /// <summary>
+        ///     Maps to https://login.microsoftonline.com/organizations/
+        /// </summary>
+        AzureAdOnly,
 
-        public HttpClient GetHttpClient()
-        {
-            return _httpClient;
-        }
+        /// <summary>
+        ///     Maps to https://login.microsoftonline.com/consumers/
+        /// </summary>
+        MicrosoftAccountOnly
     }
 }

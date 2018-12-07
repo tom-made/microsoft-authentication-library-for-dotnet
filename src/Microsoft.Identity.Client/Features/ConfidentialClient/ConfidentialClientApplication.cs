@@ -34,6 +34,7 @@ using Microsoft.Identity.Client.Internal;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.TelemetryCore;
 using System.Threading;
+using Microsoft.Identity.Client.Config;
 using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Http;
 
@@ -58,6 +59,12 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
+        internal ConfidentialClientApplication(ApplicationConfiguration configuration) 
+            : base(configuration)
+        {
+            GuardMobileFrameworks();
+        }
+
         /// <summary>
         /// Constructor for a confidential client application requesting tokens with the default authority (<see cref="ClientApplicationBase.DefaultAuthority"/>)
         /// </summary>
@@ -79,7 +86,13 @@ namespace Microsoft.Identity.Client
         /// enables app developers to specify the authority
         public ConfidentialClientApplication(string clientId, string redirectUri,
             ClientCredential clientCredential, TokenCache userTokenCache, TokenCache appTokenCache)
-            : this(clientId, DefaultAuthority, redirectUri, clientCredential, userTokenCache, appTokenCache)
+            : this(ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(new ApplicationOptions { ClientId = clientId })
+                                                       .WithAuthority(DefaultAuthority, false, true)
+                                                       .WithRedirectUri(redirectUri)
+                                                       .WithClientCredential(clientCredential)
+                                                       .WithUserTokenCache(userTokenCache)
+                                                       .WithAppTokenCache(appTokenCache)
+                                                       .BuildConfiguration())
         {
             GuardMobileFrameworks();
         }
@@ -116,21 +129,28 @@ namespace Microsoft.Identity.Client
         /// enables app developers to create a confidential client application requesting tokens with the default authority.
         public ConfidentialClientApplication(string clientId, string authority, string redirectUri,
             ClientCredential clientCredential, TokenCache userTokenCache, TokenCache appTokenCache)
-            : this(null, clientId, authority, redirectUri, clientCredential, userTokenCache, appTokenCache)
+        : this(ConfidentialClientApplicationBuilder.CreateWithApplicationOptions(new ApplicationOptions { ClientId = clientId })
+                                                   .WithAuthority(DefaultAuthority, false, true)
+                                                   .WithRedirectUri(redirectUri)
+                                                   .WithRedirectUri(redirectUri)
+                                                   .WithClientCredential(clientCredential)
+                                                   .WithUserTokenCache(userTokenCache)
+                                                   .WithAppTokenCache(appTokenCache)
+                                                   .BuildConfiguration())
         {
             GuardMobileFrameworks();
         }
 
-        internal ConfidentialClientApplication(IServiceBundle serviceBundle, string clientId, string authority, string redirectUri,
-                                               ClientCredential clientCredential, TokenCache userTokenCache, TokenCache appTokenCache)
-            : base(clientId, authority, redirectUri, true, serviceBundle)
-        {
-            GuardMobileFrameworks();
+        //internal ConfidentialClientApplication(IServiceBundle serviceBundle, string clientId, string authority, string redirectUri,
+        //                                       ClientCredential clientCredential, TokenCache userTokenCache, TokenCache appTokenCache)
+        //    : base(clientId, authority, redirectUri, true, serviceBundle)
+        //{
+        //    GuardMobileFrameworks();
 
-            ClientCredential = clientCredential;
-            UserTokenCache = userTokenCache;
-            AppTokenCache = appTokenCache;
-        }
+        //    ClientCredential = clientCredential;
+        //    UserTokenCache = userTokenCache;
+        //    AppTokenCache = appTokenCache;
+        //}
 
         /// <summary>
         /// Acquires an access token for this application (usually a Web API) from the authority configured in the application, in order to access 
@@ -147,7 +167,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle);
             return
                 await
                     AcquireTokenOnBehalfCommonAsync(authority, scopes, userAssertion, ApiEvent.ApiIds.AcquireTokenOnBehalfOfWithScopeUser, false)
@@ -171,7 +191,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle, authority, ValidateAuthority);
+            Authority authorityInstance = Instance.Authority.CreateAuthorityWithOverride(ServiceBundle, AuthorityInfo.FromAuthorityUri(authority, ServiceBundle.Config.DefaultAuthorityInfo.ValidateAuthority, false));
             return
                 await
                     AcquireTokenOnBehalfCommonAsync(authorityInstance, scopes, userAssertion, ApiEvent.ApiIds.AcquireTokenOnBehalfOfWithScopeUserAuthority, false)
@@ -193,7 +213,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle);
             return
                 await
                     AcquireTokenOnBehalfCommonAsync(authority, scopes, userAssertion, ApiEvent.ApiIds.AcquireTokenOnBehalfOfWithScopeUser, true)
@@ -217,7 +237,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle, authority, ValidateAuthority);
+            Authority authorityInstance = Instance.Authority.CreateAuthorityWithOverride(ServiceBundle, AuthorityInfo.FromAuthorityUri(authority, ServiceBundle.Config.DefaultAuthorityInfo.ValidateAuthority, false));
             return
                 await
                     AcquireTokenOnBehalfCommonAsync(authorityInstance, scopes, userAssertion, ApiEvent.ApiIds.AcquireTokenOnBehalfOfWithScopeUserAuthority, true)
@@ -338,7 +358,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle);
             var requestParameters =
                 CreateRequestParameters(authority, scopes, null, UserTokenCache);
             requestParameters.ClientId = ClientId;
@@ -370,7 +390,7 @@ namespace Microsoft.Identity.Client
         {
             GuardMobileFrameworks();
 
-            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle, authority, ValidateAuthority);
+            Authority authorityInstance = Instance.Authority.CreateAuthorityWithOverride(ServiceBundle, AuthorityInfo.FromAuthorityUri(authority, ServiceBundle.Config.DefaultAuthorityInfo.ValidateAuthority, false));
             var requestParameters = CreateRequestParameters(authorityInstance, scopes, null,
                 UserTokenCache);
             requestParameters.RedirectUri = new Uri(redirectUri);
@@ -408,7 +428,7 @@ namespace Microsoft.Identity.Client
 
         private async Task<AuthenticationResult> AcquireTokenForClientCommonAsync(IEnumerable<string> scopes, bool forceRefresh, ApiEvent.ApiIds apiId, bool sendCertificate)
         {
-            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle);
             AuthenticationRequestParameters parameters = CreateRequestParameters(authority, scopes, null,
                 AppTokenCache);
             parameters.IsClientCredentialRequest = true;
@@ -438,7 +458,7 @@ namespace Microsoft.Identity.Client
         private async Task<AuthenticationResult> AcquireTokenByAuthorizationCodeCommonAsync(string authorizationCode,
             IEnumerable<string> scopes, Uri redirectUri, ApiEvent.ApiIds apiId, bool sendCertificate)
         {
-            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle, Authority, ValidateAuthority);
+            Authority authority = Instance.Authority.CreateAuthority(ServiceBundle);
             var requestParams = CreateRequestParameters(authority, scopes, null, UserTokenCache);
             requestParams.AuthorizationCode = authorizationCode;
             requestParams.RedirectUri = redirectUri;

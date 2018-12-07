@@ -25,23 +25,43 @@
 // 
 // ------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Identity.Client.Config;
-using Microsoft.Identity.Client.Http;
-using Microsoft.Identity.Client.Instance;
-using Microsoft.Identity.Client.TelemetryCore;
-using Microsoft.Identity.Client.WsTrust;
+using Microsoft.Identity.Client.Core;
 
-namespace Microsoft.Identity.Client.Core
+namespace Microsoft.Identity.Client.Instance
 {
-    internal interface IServiceBundle
+    internal class AadOpenIdConfigurationEndpointManager : IOpenIdConfigurationEndpointManager
     {
-        IApplicationConfiguration Config { get; }
+        private readonly IServiceBundle _serviceBundle;
 
-        IHttpManager HttpManager { get; }
-        ITelemetryManager TelemetryManager { get; }
-        IValidatedAuthoritiesCache ValidatedAuthoritiesCache { get; }
-        IAadInstanceDiscovery AadInstanceDiscovery { get; }
-        IPlatformProxy PlatformProxy { get; }
-        IWsTrustWebRequestManager WsTrustWebRequestManager { get; }
+        public AadOpenIdConfigurationEndpointManager(IServiceBundle serviceBundle)
+        {
+            _serviceBundle = serviceBundle;
+        }
+
+        /// <inheritdoc />
+        public async Task<string> GetOpenIdConfigurationEndpointAsync(
+            AuthorityInfo authorityInfo,
+            string userPrincipalName,
+            RequestContext requestContext)
+        {
+            var authorityUri = new Uri(authorityInfo.CanonicalAuthority);
+
+            if (authorityInfo.ValidateAuthority && !AadAuthority.IsInTrustedHostList(authorityUri.Host))
+            {
+                var discoveryResponse = await _serviceBundle.AadInstanceDiscovery.DoInstanceDiscoveryAndCacheAsync(
+                                            authorityUri,
+                                            true,
+                                            requestContext).ConfigureAwait(false);
+
+                return discoveryResponse.TenantDiscoveryEndpoint;
+            }
+
+            return authorityInfo.CanonicalAuthority + "v2.0/.well-known/openid-configuration";
+        }
     }
 }

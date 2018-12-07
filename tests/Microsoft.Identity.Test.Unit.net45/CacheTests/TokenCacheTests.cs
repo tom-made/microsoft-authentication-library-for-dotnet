@@ -298,10 +298,12 @@ namespace Microsoft.Identity.Test.Unit.CacheTests
                 atItem.Secret = atItem.GetKey().ToString();
                 _cache.TokenCacheAccessor.SaveAccessToken(atItem);
 
+                // TODO: This test was setting extended lifetime on the AuthRequestParameters, needs to be in the config
+                // IsExtendedLifeTimeEnabled = true,
+
                 var cacheItem = _cache.FindAccessTokenAsync(
                     new AuthenticationRequestParameters()
                     {
-                        IsExtendedLifeTimeEnabled = true,
                         RequestContext = new RequestContext(null, new MsalLogger(Guid.Empty, null)),
                         ClientId = MsalTestConstants.ClientId,
                         Authority = Authority.CreateAuthority(serviceBundle, MsalTestConstants.AuthorityTestTenant, false),

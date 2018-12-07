@@ -36,6 +36,7 @@ using Microsoft.Identity.Client.Internal.Requests;
 
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Cache;
+using Microsoft.Identity.Client.Config;
 using Microsoft.Identity.Client.Exceptions;
 using Microsoft.Identity.Client.Instance;
 using Microsoft.Identity.Client.OAuth2;
@@ -60,7 +61,9 @@ namespace Microsoft.Identity.Client
         internal const string NullPreferredUsernameDisplayLabel = "Missing from the token response";
         private const string MicrosoftLogin = "login.microsoftonline.com";
 
-        private IServiceBundle _serviceBundle = Core.ServiceBundle.CreateDefault();
+        // TODO: look at managing construction of tokencache entirely inside of config object so we can remove this
+        // or just leave it null and ensure we don't de-ref it until we're bound inside of a PCA.
+        private IServiceBundle _serviceBundle = Core.ServiceBundle.CreateDefault(PublicClientApplicationBuilder.Create("invalid_client_id", "invalid_authority").BuildConfiguration());
 
         internal IServiceBundle ServiceBundle
         {
@@ -237,11 +240,11 @@ namespace Microsoft.Identity.Client
 
                 // save RT in ADAL cache for public clients
                 // do not save RT in ADAL cache for MSAL B2C scenarios
-                if (!requestParams.IsClientCredentialRequest && !requestParams.Authority.AuthorityType.Equals(Instance.AuthorityType.B2C))
+                if (!requestParams.IsClientCredentialRequest && !requestParams.Authority.AuthorityType.Equals(Config.AuthorityType.B2C))
                 {
                     CacheFallbackOperations.WriteAdalRefreshToken
                         (LegacyCachePersistence, msalRefreshTokenCacheItem, msalIdTokenCacheItem,
-                        Authority.UpdateHost(requestParams.TenantUpdatedCanonicalAuthority, preferredEnvironmentHost),
+                        Authority.CreateAuthorityUriWithHost(requestParams.TenantUpdatedCanonicalAuthority, preferredEnvironmentHost),
                         msalIdTokenCacheItem.IdToken.ObjectId, response.Scope);
                 }
 
@@ -312,12 +315,12 @@ namespace Microsoft.Identity.Client
             {
                 var instanceDiscoveryMetadataEntry = await GetCachedOrDiscoverAuthorityMetaDataAsync(
                     requestParams.Authority.CanonicalAuthority,
-                    requestParams.ValidateAuthority, requestParams.RequestContext).ConfigureAwait(false);
+                    requestParams.Authority.AuthorityInfo.ValidateAuthority, requestParams.RequestContext).ConfigureAwait(false);
 
                 environmentAliases.UnionWith
                     (GetEnvironmentAliases(requestParams.Authority.CanonicalAuthority, instanceDiscoveryMetadataEntry));
 
-                if (requestParams.Authority.AuthorityType != Instance.AuthorityType.B2C)
+                if (requestParams.Authority.AuthorityType != Config.AuthorityType.B2C)
                 {
                     preferredEnvironmentAlias = instanceDiscoveryMetadataEntry.PreferredCache;
                 }
@@ -440,7 +443,7 @@ namespace Microsoft.Identity.Client
                     return msalAccessTokenCacheItem;
                 }
 
-                if (requestParams.IsExtendedLifeTimeEnabled && msalAccessTokenCacheItem.ExtendedExpiresOn >
+                if (_serviceBundle.Config.IsExtendedTokenLifetimeEnabled && msalAccessTokenCacheItem.ExtendedExpiresOn >
                     DateTime.UtcNow + TimeSpan.FromMinutes(DefaultExpirationBufferInMinutes))
                 {
                     requestParams.RequestContext.Logger.Info(
@@ -487,7 +490,7 @@ namespace Microsoft.Identity.Client
         }
 
         var instanceDiscoveryMetadataEntry = await GetCachedOrDiscoverAuthorityMetaDataAsync(requestParam.Authority.CanonicalAuthority,
-            requestParam.ValidateAuthority, requestParam.RequestContext).ConfigureAwait(false);
+            requestParam.Authority.AuthorityInfo.ValidateAuthority, requestParam.RequestContext).ConfigureAwait(false);
 
         var environmentAliases = GetEnvironmentAliases(requestParam.Authority.CanonicalAuthority,
             instanceDiscoveryMetadataEntry);
@@ -707,10 +710,9 @@ namespace Microsoft.Identity.Client
         bool validateAuthority,
         RequestContext requestContext)
     {
-
         Uri authorityHost = new Uri(authority);
         var authorityType = Authority.GetAuthorityType(authority);
-        if (authorityType == Instance.AuthorityType.Aad ||
+        if (authorityType == Microsoft.Identity.Client.Config.AuthorityType.Aad ||
             authorityHost.Host.Equals(MicrosoftLogin, StringComparison.OrdinalIgnoreCase))
         {
             var instanceDiscoveryMetadata = await ServiceBundle.AadInstanceDiscovery.GetMetadataEntryAsync(
@@ -731,7 +733,7 @@ namespace Microsoft.Identity.Client
 
         InstanceDiscoveryMetadataEntry instanceDiscoveryMetadata = null;
         var authorityType = Authority.GetAuthorityType(authority);
-        if (authorityType == Instance.AuthorityType.Aad || authorityType == Instance.AuthorityType.B2C)
+        if (authorityType == Config.AuthorityType.Aad || authorityType == Config.AuthorityType.B2C)
         {
             ServiceBundle.AadInstanceDiscovery.TryGetValue(new Uri(authority).Host, out instanceDiscoveryMetadata);
         }

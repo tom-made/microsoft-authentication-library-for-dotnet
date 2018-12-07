@@ -37,6 +37,7 @@ using Microsoft.Identity.Client.UI;
 using Microsoft.Identity.Test.Common.Core.Mocks;
 using Microsoft.Identity.Test.Common.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Identity.Client.Config;
 
 namespace Microsoft.Identity.Test.Unit.CacheTests
 {
@@ -56,20 +57,13 @@ namespace Microsoft.Identity.Test.Unit.CacheTests
         {
             using (var httpManager = new MockHttpManager())
             {
-                var serviceBundle = ServiceBundle.CreateWithCustomHttpManager(httpManager);
+                PublicClientApplication app = PublicClientApplicationBuilder
+                    .Create(MsalTestConstants.ClientId, ClientApplicationBase.DefaultAuthority)
+                    .WithHttpManager(httpManager)
+                    .WithUserTokenCache(new TokenCache() { LegacyCachePersistence = new TestLegacyCachePersistance() })
+                    .BuildConcrete();
 
                 httpManager.AddInstanceDiscoveryMockHandler();
-
-                PublicClientApplication app = new PublicClientApplication(
-                    serviceBundle,
-                    MsalTestConstants.ClientId,
-                    ClientApplicationBase.DefaultAuthority)
-                {
-                    UserTokenCache =
-                    {
-                        LegacyCachePersistence = new TestLegacyCachePersistance()
-                    }
-                };
 
                 MsalMockHelpers.ConfigureMockWebUI(new AuthorizationResult(AuthorizationStatus.Success,
                                                                            app.RedirectUri + "?code=some-code"));
