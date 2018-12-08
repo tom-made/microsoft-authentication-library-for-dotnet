@@ -37,9 +37,6 @@ namespace Microsoft.Identity.Client.Core
     {
         internal ServiceBundle(
             ApplicationConfiguration config,
-            //IValidatedAuthoritiesCache validatedAuthoritiesCache = null,
-            //IAadInstanceDiscovery aadInstanceDiscovery = null,
-            //IWsTrustWebRequestManager wsTrustWebRequestManager = null,
             bool shouldClearCaches = false)
         {
             Config = config;
@@ -72,14 +69,9 @@ namespace Microsoft.Identity.Client.Core
         /// <inheritdoc />
         public IApplicationConfiguration Config { get; }
 
-        public static ServiceBundle CreateDefault(ApplicationConfiguration config)
+        public static ServiceBundle Create(ApplicationConfiguration config)
         {
             return new ServiceBundle(config);
-        }
-
-        public static ServiceBundle CreateWithClearCaches(ApplicationConfiguration config)
-        {
-            return new ServiceBundle(config, shouldClearCaches: true);
         }
     }
 }

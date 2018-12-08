@@ -63,7 +63,7 @@ namespace Microsoft.Identity.Client
 
         // TODO: look at managing construction of tokencache entirely inside of config object so we can remove this
         // or just leave it null and ensure we don't de-ref it until we're bound inside of a PCA.
-        private IServiceBundle _serviceBundle = Core.ServiceBundle.CreateDefault(PublicClientApplicationBuilder.Create("invalid_client_id", "invalid_authority").BuildConfiguration());
+        private IServiceBundle _serviceBundle = Core.ServiceBundle.Create(PublicClientApplicationBuilder.Create("invalid_client_id", ClientApplicationBase.DefaultAuthority).BuildConfiguration());
 
         internal IServiceBundle ServiceBundle
         {

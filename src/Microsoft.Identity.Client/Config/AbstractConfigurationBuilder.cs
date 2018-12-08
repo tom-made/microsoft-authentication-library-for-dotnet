@@ -95,7 +95,11 @@ namespace Microsoft.Identity.Client.Config
         /// <returns></returns>
         public T WithClientId(string clientId)
         {
-            Config.ClientId = clientId;
+            if (!string.IsNullOrWhiteSpace(clientId))
+            {
+                Config.ClientId = clientId;
+            }
+
             return (T)this;
         }
 
@@ -105,7 +109,11 @@ namespace Microsoft.Identity.Client.Config
         /// <returns></returns>
         public T WithRedirectUri(string redirectUri)
         {
-            Config.RedirectUri = redirectUri;
+            if (!string.IsNullOrWhiteSpace(redirectUri))
+            {
+                Config.RedirectUri = redirectUri;
+            }
+
             return (T)this;
         }
 
@@ -115,7 +123,11 @@ namespace Microsoft.Identity.Client.Config
         /// <returns></returns>
         public T WithTenant(string tenant)
         {
-            Config.Tenant = tenant;
+            if (!string.IsNullOrWhiteSpace(tenant))
+            {
+                Config.Tenant = tenant;
+            }
+
             return (T)this;
         }
 

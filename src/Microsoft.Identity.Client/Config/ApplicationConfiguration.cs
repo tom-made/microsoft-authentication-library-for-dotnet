@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Http;
 using Microsoft.Identity.Client.TelemetryCore;
 
@@ -44,7 +45,7 @@ namespace Microsoft.Identity.Client.Config
 
         public string ClientId { get; internal set; }
         public string Tenant { get; internal set; }
-        public string RedirectUri { get; internal set; }
+        public string RedirectUri { get; internal set; } = Constants.DefaultRedirectUri;
         public bool EnablePiiLogging { get; internal set; }
         public LogLevel LogLevel { get; internal set; }
         public IMsalHttpClientFactory HttpClientFactory { get; internal set; }

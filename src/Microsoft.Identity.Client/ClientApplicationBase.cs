@@ -57,20 +57,12 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        private TokenCache _userTokenCache;
-
         /// <Summary>
         /// Default Authority used for interactive calls.
         /// </Summary>
         internal const string DefaultAuthority = "https://login.microsoftonline.com/common/";
 
         internal IServiceBundle ServiceBundle { get; }
-
-        internal ITelemetryReceiver TelemetryReceiver
-        {
-            get => ServiceBundle.TelemetryManager.TelemetryReceiver;
-            set => ServiceBundle.TelemetryManager.TelemetryReceiver = value;
-        }
 
         /////  <summary>
         /////  Constructor of the base application
@@ -101,17 +93,16 @@ namespace Microsoft.Identity.Client
         /// <param name="config"></param>
         internal ClientApplicationBase(ApplicationConfiguration config)
         {
-            ServiceBundle = Core.ServiceBundle.CreateDefault(config);
+            ServiceBundle = Core.ServiceBundle.Create(config);
 
-            Authority authorityInstance = Instance.Authority.CreateAuthority(ServiceBundle);
-            //if (UserTokenCache != null)
-            //{
-            //    UserTokenCache.ClientId = clientId;
-            //}
+            UserTokenCache = config.UserTokenCache;
+            if (UserTokenCache  != null)
+            {
+                UserTokenCache .ClientId = ClientId;
+                UserTokenCache .ServiceBundle = ServiceBundle;
+            }
 
-            RequestContext requestContext = new RequestContext(ClientId, new MsalLogger(Guid.Empty, null));
-
-            requestContext.Logger.Info(string.Format(CultureInfo.InvariantCulture,
+            new RequestContext(ClientId, new MsalLogger(Guid.Empty, null)).Logger.Info(string.Format(CultureInfo.InvariantCulture,
                 "MSAL {0} with assembly version '{1}', file version '{2}' and informational version '{3}' is running...",
                 PlatformProxyFactory.GetPlatformProxy().GetProductName(), MsalIdHelper.GetMsalVersion(),
                 AssemblyUtils.GetAssemblyFileVersionAttribute(), AssemblyUtils.GetAssemblyInformationalVersion()));
@@ -162,23 +153,12 @@ namespace Microsoft.Identity.Client
         /// This property is also concatenated to the <c>extraQueryParameter</c> parameters of token acquisition operations.
         /// </summary>
         public string SliceParameters => ServiceBundle.Config.SliceParameters;
+        // TODO: VALIDATE IF WE NEED THIS VARIABLE
 
         /// <Summary>
         /// Token Cache instance for storing User tokens.
         /// </Summary>
-        internal TokenCache UserTokenCache
-        {
-            get => _userTokenCache;
-            set
-            {
-                _userTokenCache = value;
-                if (_userTokenCache != null)
-                {
-                    _userTokenCache.ClientId = ClientId;
-                    _userTokenCache.ServiceBundle = ServiceBundle;
-                }
-            }
-        }
+        internal TokenCache UserTokenCache { get; }
 
         /// <summary>
         /// Gets/sets a boolean value telling the application if the authority needs to be verified against a list of known authorities. The default
@@ -187,12 +167,7 @@ namespace Microsoft.Identity.Client
         /// and before an operation acquiring a token or interacting with the STS.
         /// </summary>
         public bool ValidateAuthority => ServiceBundle.Config.DefaultAuthorityInfo.ValidateAuthority;
-
-        /// <summary>
-        /// ExtendedLifeTimeEnabled is a Boolean that first party applications (read Office) can set to true in case when the STS has an outage,
-        /// to be more resilient.
-        /// </summary>
-        private bool ExtendedLifeTimeEnabled => ServiceBundle.Config.IsExtendedTokenLifetimeEnabled;
+        // TODO: VALIDATE IF WE NEED THIS VARIABLE
 
         /// <summary>
         /// Returns all the available <see cref="IAccount">accounts</see> in the user token cache for the application.

@@ -25,31 +25,19 @@
 // 
 // ------------------------------------------------------------------------------
 
-using System.Linq;
-using System.Net.Http.Headers;
-using Microsoft.Identity.Client.Http;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Microsoft.Identity.Test.Unit.CoreTests.HttpTests
+namespace Microsoft.Identity.Client.Instance
 {
-    [TestClass]
-    public class HttpClientFactoryTests
+    internal class AuthorityEndpoints
     {
-        [TestMethod]
-        [TestCategory("HttpClientFactoryTests")]
-        public void GetHttpClient_MaxRespContentBuffSizeSetTo1Mb()
+        public AuthorityEndpoints(string authorizationEndpoint, string tokenEndpoint, string selfSignedJwtAudience)
         {
-            Assert.AreEqual(1024 * 1024, new HttpClientFactory().GetHttpClient().MaxResponseContentBufferSize);
+            AuthorizationEndpoint = authorizationEndpoint;
+            TokenEndpoint = tokenEndpoint;
+            SelfSignedJwtAudience = selfSignedJwtAudience;
         }
 
-        [TestMethod]
-        [TestCategory("HttpClientFactoryTests")]
-        public void GetHttpClient_DefaultHeadersSetToJson()
-        {
-            var client = new HttpClientFactory().GetHttpClient();
-            Assert.IsNotNull(client.DefaultRequestHeaders.Accept);
-            Assert.IsTrue(
-                client.DefaultRequestHeaders.Accept.Any<MediaTypeWithQualityHeaderValue>(x => x.MediaType == "application/json"));
-        }
+        public string AuthorizationEndpoint { get; }
+        public string TokenEndpoint { get; }
+        public string SelfSignedJwtAudience { get; }
     }
 }

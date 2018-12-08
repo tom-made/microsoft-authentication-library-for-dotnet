@@ -42,15 +42,6 @@ namespace Microsoft.Identity.Client.Instance
         internal B2CAuthority(IServiceBundle serviceBundle, AuthorityInfo authorityInfo)
             : base(serviceBundle, authorityInfo)
         {
-            Uri authorityUri = new Uri(AuthorityInfo.CanonicalAuthority);
-            string[] pathSegments = authorityUri.AbsolutePath.Substring(1).Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (pathSegments.Length < 3)
-            {
-                throw new ArgumentException(CoreErrorMessages.B2cAuthorityUriInvalidPath);
-            }
-
-            CanonicalAuthority =string.Format(CultureInfo.InvariantCulture, B2CCanonicalAuthorityTemplate, authorityUri.Authority,
-                pathSegments[0], pathSegments[1], pathSegments[2]);
         }
 
         internal override async Task UpdateCanonicalAuthorityAsync(

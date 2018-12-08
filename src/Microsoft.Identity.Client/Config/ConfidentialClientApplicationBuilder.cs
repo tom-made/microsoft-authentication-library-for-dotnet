@@ -50,6 +50,53 @@ namespace Microsoft.Identity.Client.Config
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="tenant"></param>
+        /// <param name="redirectUri"></param>
+        /// <returns></returns>
+        public static ConfidentialClientApplicationBuilder Create(string clientId, string tenant, string redirectUri)
+        {
+            return CreateWithApplicationOptions(new ApplicationOptions
+            {
+                ClientId = clientId,
+                Tenant = tenant,
+                RedirectUri = redirectUri
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="authority"></param>
+        /// <param name="validateAuthority"></param>
+        /// <returns></returns>
+        public static ConfidentialClientApplicationBuilder Create(string clientId, string authority, bool validateAuthority = true)
+        {
+            return CreateWithApplicationOptions(
+                new ApplicationOptions
+                {
+                    ClientId = clientId
+                }).WithAuthority(authority, validateAuthority, true);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public static ConfidentialClientApplicationBuilder Create(string clientId)
+        {
+            return CreateWithApplicationOptions(
+                new ApplicationOptions
+                {
+                    ClientId = clientId
+                });
+        }
+
+        /// <summary>
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
@@ -96,6 +143,11 @@ namespace Microsoft.Identity.Client.Config
         /// </summary>
         /// <returns></returns>
         public IConfidentialClientApplication Build()
+        {
+            return BuildConcrete();
+        }
+
+        internal ConfidentialClientApplication BuildConcrete()
         {
             return new ConfidentialClientApplication(BuildConfiguration());
         }

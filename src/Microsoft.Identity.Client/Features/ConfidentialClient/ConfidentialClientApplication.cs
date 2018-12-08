@@ -59,10 +59,17 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal ConfidentialClientApplication(ApplicationConfiguration configuration) 
-            : base(configuration)
+        internal ConfidentialClientApplication(ApplicationConfiguration config)
+            : base(config)
         {
             GuardMobileFrameworks();
+
+            AppTokenCache = config.UserTokenCache;
+            if (AppTokenCache  != null)
+            {
+                AppTokenCache .ClientId = ClientId;
+                AppTokenCache .ServiceBundle = ServiceBundle;
+            }
         }
 
         /// <summary>
@@ -409,22 +416,21 @@ namespace Microsoft.Identity.Client
             return await handler.CreateAuthorizationUriAsync().ConfigureAwait(false);
         }
 
-        internal ClientCredential ClientCredential { get; }
+        internal ClientCredential ClientCredential => ServiceBundle.Config.ClientCredential;
 
-        private TokenCache _appTokenCache;
-        internal TokenCache AppTokenCache
-        {
-            get => _appTokenCache;
-            private set
-            {
-                _appTokenCache = value;
-                if (_appTokenCache != null)
-                {
-                    _appTokenCache.ClientId = ClientId;
-                    _appTokenCache.ServiceBundle = ServiceBundle;
-                }
-            }
-        }
+        internal TokenCache AppTokenCache { get; }
+        //{
+        //    get => _appTokenCache;
+        //    //private set
+        //    //{
+        //    //    _appTokenCache = value;
+        //    //    if (_appTokenCache != null)
+        //    //    {
+        //    //        _appTokenCache.ClientId = ClientId;
+        //    //        _appTokenCache.ServiceBundle = ServiceBundle;
+        //    //    }
+        //    //}
+        //}
 
         private async Task<AuthenticationResult> AcquireTokenForClientCommonAsync(IEnumerable<string> scopes, bool forceRefresh, ApiEvent.ApiIds apiId, bool sendCertificate)
         {
@@ -474,7 +480,7 @@ namespace Microsoft.Identity.Client
         {
             AuthenticationRequestParameters parameters = base.CreateRequestParameters(authority, scopes, user, cache);
             parameters.ClientId = ClientId;
-            parameters.ClientCredential = ClientCredential;
+            parameters.ClientCredential = ServiceBundle.Config.ClientCredential;
 
             return parameters;
         }

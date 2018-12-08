@@ -25,6 +25,7 @@
 // 
 // ------------------------------------------------------------------------------
 
+using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -37,7 +38,7 @@ namespace Microsoft.Identity.Test.Unit.Config
         public void TestSimpleConstruction()
         {
             var pca = PublicClientApplicationBuilder
-                      .Create("the-client-id", "the-tenant", "https://theredirecturi").WithEnablePiiLogging(true).Build();
+                      .Create("the-client-id", ClientApplicationBase.DefaultAuthority).WithEnablePiiLogging(true).Build();
         }
     }
 }

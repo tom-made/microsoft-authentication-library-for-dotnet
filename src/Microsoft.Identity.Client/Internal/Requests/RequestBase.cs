@@ -318,7 +318,7 @@ namespace Microsoft.Identity.Client.Internal.Requests
                   .ConfigureAwait(false);
 
             // todo: send IAuthorityEndpointResolutionManager in to RequestBase as a parameter...
-            var resolutionManager = new AuthorityEndpointResolutionManager(ServiceBundle);
+            var resolutionManager = new AuthorityEndpointResolutionManager(ServiceBundle, false);
             
             AuthenticationRequestParameters.Endpoints = await resolutionManager.ResolveEndpointsAsync(
                 AuthenticationRequestParameters.Authority.AuthorityInfo,

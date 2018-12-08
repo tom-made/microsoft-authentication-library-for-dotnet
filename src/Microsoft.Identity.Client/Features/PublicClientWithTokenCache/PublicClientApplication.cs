@@ -51,23 +51,7 @@ namespace Microsoft.Identity.Client
             : this(PublicClientApplicationBuilder.Create(clientId, authority).WithUserTokenCache(userTokenCache).BuildConfiguration())
         {
             GuardOnMobilePlatforms();
-            UserTokenCache = userTokenCache;
         }
-
-        //internal PublicClientApplication(
-        //    IServiceBundle serviceBundle,
-        //    string clientId,
-        //    string authority,
-        //    TokenCache userTokenCache)
-        //    : base(
-        //        clientId,
-        //        authority,
-        //        PlatformProxyFactory.GetPlatformProxy().GetDefaultRedirectUri(clientId),
-        //        true,
-        //        serviceBundle)
-        //{
-        //    UserTokenCache = userTokenCache;
-        //}
 
         private static void GuardOnMobilePlatforms()
         {

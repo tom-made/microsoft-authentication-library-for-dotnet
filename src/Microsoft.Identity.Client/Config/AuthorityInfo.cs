@@ -38,16 +38,31 @@ namespace Microsoft.Identity.Client.Config
             ValidateAuthority = authorityType != AuthorityType.B2C && validateAuthority;
             IsDefault = isDefault;
 
-            var authorityUri = new UriBuilder(authority);
-            Host = authorityUri.Host;
+            Host = new UriBuilder(authority).Host;
 
             UserRealmUriPrefix = string.Format(CultureInfo.InvariantCulture, "https://{0}/common/userrealm/", Host);
 
-            CanonicalAuthority = string.Format(
-                CultureInfo.InvariantCulture,
-                "https://{0}/{1}/",
-                authorityUri.Uri.Authority,
-                GetFirstPathSegment(authority));
+            if (AuthorityType == AuthorityType.B2C)
+            {
+                Uri authorityUri = new Uri(authority);
+                string[] pathSegments = authorityUri.AbsolutePath.Substring(1).Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                if (pathSegments.Length < 3)
+                {
+                    throw new ArgumentException(CoreErrorMessages.B2cAuthorityUriInvalidPath);
+                }
+
+                CanonicalAuthority = string.Format(CultureInfo.InvariantCulture, "https://{0}/{1}/{2}/{3}/", authorityUri.Authority,
+                                                   pathSegments[0], pathSegments[1], pathSegments[2]);
+            }
+            else
+            {
+                var authorityUri = new UriBuilder(authority);
+                CanonicalAuthority = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "https://{0}/{1}/",
+                    authorityUri.Uri.Authority,
+                    GetFirstPathSegment(authority));
+            }
         }
 
         internal static AuthorityInfo FromAuthorityUri(string authorityUri, bool validateAuthority, bool isDefaultAuthority)
@@ -60,7 +75,7 @@ namespace Microsoft.Identity.Client.Config
         }
 
         public string Host { get; }
-        public string CanonicalAuthority { get; }
+        public string CanonicalAuthority { get; set; }
 
         public AuthorityType AuthorityType { get; }
         public bool ValidateAuthority { get; }
