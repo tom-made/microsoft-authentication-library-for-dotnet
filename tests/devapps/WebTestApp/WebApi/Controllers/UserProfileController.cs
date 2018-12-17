@@ -163,9 +163,7 @@ namespace WebApi.Controllers
             var response = await client.SendAsync(request).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
-            {
                 throw new InvalidOperationException(response.StatusCode.ToString());
-            }
 
             return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
