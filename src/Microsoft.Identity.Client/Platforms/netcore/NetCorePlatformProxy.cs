@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client.Cache;
@@ -109,7 +110,7 @@ namespace Microsoft.Identity.Client.Platforms.netcore
         /// <returns>Name of the calling application</returns>
         public string GetCallingApplicationName()
         {
-            return Assembly.GetEntryAssembly()?.GetName()?.Name?.ToString();
+            return Assembly.GetEntryAssembly()?.GetName()?.Name?.ToString(CultureInfo.InvariantCulture);
         }
 
         /// <summary>

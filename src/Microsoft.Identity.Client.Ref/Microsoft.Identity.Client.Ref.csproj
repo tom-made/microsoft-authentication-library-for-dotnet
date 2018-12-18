@@ -3,15 +3,15 @@
   <!-- This project is used to generated a ref assembly for MSAL. Use #if REFERENCE_ASSEMBLY in the code files.
   See https://oren.codes/2018/07/09/create-and-pack-reference-assemblies-made-easy/ for details-->
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard1.3;uap10.0;MonoAndroid8.1;Xamarin.iOS10;netcoreapp1.0</TargetFrameworks>
-    <!-- <TargetFrameworks>net45;netstandard1.3;netcoreapp1.0</TargetFrameworks> -->
+    <!-- <TargetFrameworks>net461;netstandard2.0;uap10.0;MonoAndroid8.1;Xamarin.iOS10;netcoreapp2.1</TargetFrameworks> -->
+    <TargetFrameworks>net461;netstandard2.0;netcoreapp2.1</TargetFrameworks>
     <DefineConstants>$(DefineConstants);REFERENCE_ASSEMBLY</DefineConstants>
   </PropertyGroup>
 
 
   <Import Project="../MSAL.Common.props" />
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0' ">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1' ">
     <DefineConstants>$(DefineConstants);NET_CORE_BUILDTIME</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0' ">
@@ -20,13 +20,13 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'MonoAndroid8.1'">
     <DefineConstants>$(DefineConstants);ANDROID_BUILDTIME</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
     <DefineConstants>$(DefineConstants);DESKTOP_BUILDTIME</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'Xamarin.iOS10'">
     <DefineConstants>$(DefineConstants);iOS_BUILDTIME</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);NETSTANDARD_BUILDTIME</DefineConstants>
   </PropertyGroup>
   <ItemGroup>

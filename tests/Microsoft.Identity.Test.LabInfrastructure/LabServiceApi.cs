@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using Newtonsoft.Json;
@@ -95,7 +96,7 @@ namespace Microsoft.Identity.Test.LabInfrastructure
 
             UriBuilder uriBuilder = new UriBuilder("http://api.msidlab.com/api/user")
             {
-                Query = string.Join("&", queryDict.Select(x => x.Key + "=" + x.Value.ToString()))
+                Query = string.Join("&", queryDict.Select(x => x.Key + "=" + x.Value.ToString(CultureInfo.InvariantCulture)))
             };
 
             //Fetch user

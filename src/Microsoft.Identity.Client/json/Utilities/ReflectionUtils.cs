@@ -41,7 +41,7 @@ using Microsoft.Identity.Json.Serialization;
 
 namespace Microsoft.Identity.Json.Utilities
 {
-#if (DOTNET || PORTABLE || PORTABLE40) && !ANDROID && !NET_CORE
+#if (DOTNET || PORTABLE || PORTABLE40) && !ANDROID && !NET_CORE && !NETSTANDARD
     [Flags]
     internal enum MemberTypes
     {
@@ -52,7 +52,7 @@ namespace Microsoft.Identity.Json.Utilities
     }
 #endif
 
-#if PORTABLE && !ANDROID && !NET_CORE && !WINDOWS_APP
+#if PORTABLE && !ANDROID && !NET_CORE && !WINDOWS_APP && !NETSTANDARD
     [Flags]
     internal enum BindingFlags
     {
@@ -746,7 +746,7 @@ namespace Microsoft.Identity.Json.Utilities
             return attributes?.FirstOrDefault();
         }
 
-#if !(DOTNET || PORTABLE) || ANDROID
+#if !(DOTNET || PORTABLE) || ANDROID || NETSTANDARD || NET_CORE
         public static T[] GetAttributes<T>(object attributeProvider, bool inherit) where T : Attribute
         {
             Attribute[] a = GetAttributes(attributeProvider, typeof(T), inherit);
