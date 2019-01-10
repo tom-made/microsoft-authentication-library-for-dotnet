@@ -38,8 +38,13 @@ namespace Microsoft.Identity.Client.Platforms.iOS.EmbeddedWebview
 {
     internal class EmbeddedWebUI : WebviewBase, IDisposable
     {
-        public RequestContext RequestContext { get; internal set; }
-        public CoreUIParent CoreUIParent { get; set; }
+        private readonly UIParent _uiParent;
+
+        public EmbeddedWebUI(UIParent uiParent)
+        {
+            _uiParent = uiParent;
+        }
+
 
         public async override Task<AuthorizationResult> AcquireAuthorizationAsync(Uri authorizationUri, Uri redirectUri, RequestContext requestContext)
         {
@@ -62,7 +67,7 @@ namespace Microsoft.Identity.Client.Platforms.iOS.EmbeddedWebview
             InvokeOnMainThread(() =>
             {
                 UIWindow window = UIApplication.SharedApplication.KeyWindow;
-                viewController = CoreUIParent.FindCurrentViewController(window.RootViewController);
+                viewController = UIParent.FindCurrentViewController(window.RootViewController);
             });
             try
             {
@@ -70,10 +75,10 @@ namespace Microsoft.Identity.Client.Platforms.iOS.EmbeddedWebview
                 {
                     var navigationController =
                         new AuthenticationAgentUINavigationController(authorizationUri.AbsoluteUri,
-                            redirectUri.OriginalString, CallbackMethod, CoreUIParent.PreferredStatusBarStyle)
+                            redirectUri.OriginalString, CallbackMethod, _uiParent.PreferredStatusBarStyle)
                         {
-                            ModalPresentationStyle = CoreUIParent.ModalPresentationStyle,
-                            ModalTransitionStyle = CoreUIParent.ModalTransitionStyle,
+                            ModalPresentationStyle = _uiParent.ModalPresentationStyle,
+                            ModalTransitionStyle = _uiParent.ModalTransitionStyle,
                             TransitioningDelegate = viewController.TransitioningDelegate
                         };
 

@@ -33,7 +33,7 @@ namespace Microsoft.Identity.Client.Platforms.netcore
 {
     internal class WebUIFactory : IWebUIFactory
     {
-        public IWebUI CreateAuthenticationDialog(CoreUIParent parent, RequestContext requestContext)
+        public IWebUI CreateAuthenticationDialog(UIParent parent, RequestContext requestContext)
         {
             throw new NotImplementedException();
         }

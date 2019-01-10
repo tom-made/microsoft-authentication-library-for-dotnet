@@ -51,7 +51,7 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-
+        #region Public Surface
         /// <summary>
         /// Default constructor. Should not be used on Android.
         /// </summary>
@@ -68,7 +68,8 @@ namespace Microsoft.Identity.Client
         [CLSCompliant(false)]
         public UIParent(Activity activity)
         {
-            CoreUIParent = new CoreUIParent(activity);
+            Activity = activity ?? throw new ArgumentException("passed in activity is null", nameof(activity));
+            CallerActivity = activity;
         }
 
         /// <summary>
@@ -78,10 +79,10 @@ namespace Microsoft.Identity.Client
         [CLSCompliant(false)]
         public UIParent(Activity activity, bool useEmbeddedWebview) : this(activity)
         {
-            CoreUIParent.UseEmbeddedWebview = useEmbeddedWebview;
+            UseEmbeddedWebview = useEmbeddedWebview;
         }
 
-        #if ANDROID_RUNTIME
+#if ANDROID_RUNTIME
         /// <summary>
         /// Platform agnostic constructor that allows building an UIParent from a NetStandard assembly.
         /// On Android, the parent is expected to be an Activity.
@@ -94,7 +95,13 @@ namespace Microsoft.Identity.Client
         {
         }
 
-        #endif
+#endif
+
+        #endregion
+
+        internal bool UseEmbeddedWebview { get; }
+        internal Activity Activity { get; }
+        internal Activity CallerActivity { get; } //TODO: do we need this?!
 
         private static Activity ValidateParentObject(object parent)
         {
@@ -114,8 +121,6 @@ namespace Microsoft.Identity.Client
 
             return parentActivity;
         }
-
-        internal CoreUIParent CoreUIParent { get; }
 
         /// <summary>
         /// Checks Android device for chrome packages.

@@ -38,12 +38,12 @@ namespace Microsoft.Identity.Client.Platforms.Android.EmbeddedWebview
 {
     internal class EmbeddedWebUI : WebviewBase
     {
-        private readonly CoreUIParent _coreUIParent;
+        private readonly UIParent _uiParent;
         public RequestContext RequestContext { get; internal set; }
 
-        public EmbeddedWebUI(CoreUIParent coreUIParent)
+        public EmbeddedWebUI(UIParent uiParent)
         {
-            _coreUIParent = coreUIParent;
+            _uiParent = uiParent;
         }
 
         public async override Task<AuthorizationResult> AcquireAuthorizationAsync(Uri authorizationUri, Uri redirectUri, RequestContext requestContext)
@@ -52,10 +52,10 @@ namespace Microsoft.Identity.Client.Platforms.Android.EmbeddedWebview
 
             try
             {
-                var agentIntent = new Intent(_coreUIParent.CallerActivity, typeof(AuthenticationAgentActivity));
+                var agentIntent = new Intent(_uiParent.CallerActivity, typeof(AuthenticationAgentActivity));
                 agentIntent.PutExtra("Url", authorizationUri.AbsoluteUri);
                 agentIntent.PutExtra("Callback", redirectUri.AbsoluteUri);
-                _coreUIParent.CallerActivity.StartActivityForResult(agentIntent, 0);
+                _uiParent.CallerActivity.StartActivityForResult(agentIntent, 0);
             }
             catch (Exception ex)
             {

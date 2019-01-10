@@ -40,11 +40,11 @@ namespace Microsoft.Identity.Client.Platforms.Android.SystemWebview
     [global::Android.Runtime.Preserve(AllMembers = true)]
     internal class SystemWebUI : WebviewBase
     {
-        private readonly CoreUIParent _parent;
+        private readonly UIParent _uiParent;
 
-        public SystemWebUI(CoreUIParent parent)
+        public SystemWebUI(UIParent uiParent)
         {
-            _parent = parent;
+            _uiParent = uiParent;
         }
 
         public RequestContext RequestContext { get; set; }
@@ -55,11 +55,11 @@ namespace Microsoft.Identity.Client.Platforms.Android.SystemWebview
 
             try
             {
-                var agentIntent = new Intent(_parent.Activity, typeof(AuthenticationActivity));
+                var agentIntent = new Intent(_uiParent.Activity, typeof(AuthenticationActivity));
                 agentIntent.PutExtra(AndroidConstants.RequestUrlKey, authorizationUri.AbsoluteUri);
                 agentIntent.PutExtra(AndroidConstants.CustomTabRedirect, redirectUri.OriginalString);
                 AuthenticationActivity.RequestContext = RequestContext;
-                _parent.Activity.RunOnUiThread(()=> _parent.Activity.StartActivityForResult(agentIntent, 0));
+                _uiParent.Activity.RunOnUiThread(()=> _uiParent.Activity.StartActivityForResult(agentIntent, 0));
             }
             catch (Exception ex)
             {

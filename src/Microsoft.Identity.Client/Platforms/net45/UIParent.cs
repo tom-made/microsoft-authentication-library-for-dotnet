@@ -41,14 +41,13 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal CoreUIParent CoreUIParent { get; }
+        #region Public Surface
 
         /// <summary>
         /// Creates a UIParent that will configure the underlying embedded webview to be centered on the screen
         /// </summary>
         public UIParent()
         {
-            CoreUIParent = new CoreUIParent();
         }
 
         /// <summary>
@@ -58,7 +57,7 @@ namespace Microsoft.Identity.Client
         /// are either of type <see cref="System.Windows.Forms.IWin32Window"/> or <see cref="System.IntPtr"/> (for window handle)</param>
         public UIParent(object ownerWindow)
         {
-            CoreUIParent = new CoreUIParent(ownerWindow);
+            OwnerWindow = ownerWindow;
         }
 
 #if DESKTOP_RUNTIME
@@ -83,14 +82,10 @@ namespace Microsoft.Identity.Client
             return false;
         }
 
-        /// <summary>
-        /// Hidden webview can be used in both UWP and desktop applications.
-        /// </summary>
-        internal bool UseHiddenBrowser
-        {
-            get => CoreUIParent.UseHiddenBrowser;
-            set => CoreUIParent.UseHiddenBrowser = value;
-        }
+        #endregion
 
+        internal bool UseHiddenBrowser { get; set; }
+
+        internal object OwnerWindow { get; set; }
     }
 }

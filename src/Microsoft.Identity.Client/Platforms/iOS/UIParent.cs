@@ -27,6 +27,7 @@
 
 using Microsoft.Identity.Client.Internal;
 using Microsoft.Identity.Client.UI;
+using UIKit;
 
 namespace Microsoft.Identity.Client
 {
@@ -41,14 +42,12 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal CoreUIParent CoreUIParent { get; }
-
+        #region Public Surface
         /// <summary>
         /// Default constructor.
         /// </summary>
         public UIParent()
         {
-            CoreUIParent = new CoreUIParent();
         }
 
         /// <summary>
@@ -58,7 +57,7 @@ namespace Microsoft.Identity.Client
         /// <remarks>This method is likely to be removed (replaced) before final release</remarks>
         public UIParent(bool useEmbeddedWebview) : this()
         {
-            CoreUIParent.UseEmbeddedWebview = useEmbeddedWebview;
+            UseEmbeddedWebview = useEmbeddedWebview;
         }
 
 #if iOS_RUNTIME
@@ -83,6 +82,59 @@ namespace Microsoft.Identity.Client
         {
             return true;
         }
+
+        #endregion
+
+        internal bool UseEmbeddedWebview { get; }
+
+        internal UIViewController CallerViewController { get; set; }
+
+        internal static UIViewController FindCurrentViewController(UIViewController CallerViewController)
+        {
+            if (CallerViewController is UITabBarController)
+            {
+                UITabBarController tabBarController = (UITabBarController)CallerViewController;
+                return FindCurrentViewController(tabBarController.SelectedViewController);
+            }
+            else if (CallerViewController is UINavigationController)
+            {
+                UINavigationController navigationController = (UINavigationController)CallerViewController;
+                return FindCurrentViewController(navigationController.VisibleViewController);
+            }
+            else if (CallerViewController.PresentedViewController != null)
+            {
+                UIViewController presentedViewController = CallerViewController.PresentedViewController;
+                return FindCurrentViewController(presentedViewController);
+            }
+            else
+            {
+                return CallerViewController;
+            }
+        }
+
+        /// <summary>
+        /// Sets the preferred status bar style for the login form view controller presented
+        /// </summary>
+        /// <value>The preferred status bar style.</value>
+        internal UIStatusBarStyle PreferredStatusBarStyle { get; set; }
+
+        /// <summary>
+        /// Set the transition style used when the login form view is presented
+        /// </summary>
+        /// <value>The modal transition style.</value>
+        internal UIModalTransitionStyle ModalTransitionStyle { get; set; }
+
+        /// <summary>
+        /// Sets the presentation style used when the login form view is presented
+        /// </summary>
+        /// <value>The modal presentation style.</value>
+        internal UIModalPresentationStyle ModalPresentationStyle { get; set; }
+
+        /// <summary>
+        /// Sets a custom transitioning delegate to the login form view controller
+        /// </summary>
+        /// <value>The transitioning delegate.</value>
+        internal UIViewControllerTransitioningDelegate TransitioningDelegate { get; set; }
 
     }
 }

@@ -42,14 +42,11 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal CoreUIParent CoreUIParent { get; }
-
         /// <summary>
         /// Platform agnostic default constructor.
         /// </summary>
         public UIParent()
         {
-            CoreUIParent = new CoreUIParent();
         }
 
         /// <summary>

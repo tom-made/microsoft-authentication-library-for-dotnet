@@ -31,6 +31,6 @@ namespace Microsoft.Identity.Client.UI
 {
     internal interface IWebUIFactory
     {
-        IWebUI CreateAuthenticationDialog(CoreUIParent coreUIParent, RequestContext requestContext);
+        IWebUI CreateAuthenticationDialog(UIParent uiParent, RequestContext requestContext);
     }
 }

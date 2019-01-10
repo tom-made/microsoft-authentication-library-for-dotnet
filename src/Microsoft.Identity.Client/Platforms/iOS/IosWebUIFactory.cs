@@ -34,22 +34,14 @@ namespace Microsoft.Identity.Client.Platforms.iOS
 {
     internal class IosWebUIFactory : IWebUIFactory
     {
-        public IWebUI CreateAuthenticationDialog(CoreUIParent coreUIParent, RequestContext requestContext)
+        public IWebUI CreateAuthenticationDialog(UIParent uiParent, RequestContext requestContext)
         {
-            if (coreUIParent.UseEmbeddedWebview)
+            if (uiParent.UseEmbeddedWebview)
             {
-                return new EmbeddedWebUI()
-                {
-                    RequestContext = requestContext,
-                    CoreUIParent = coreUIParent
-                };
+                return new EmbeddedWebUI(uiParent);
             }
 
-            //there is no need to pass UIParent.
-            return new SystemWebUI()
-            {
-                RequestContext = requestContext
-            };
+            return new SystemWebUI();
         }
     }
 }

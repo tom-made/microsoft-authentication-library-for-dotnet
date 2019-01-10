@@ -496,7 +496,7 @@ namespace Microsoft.Identity.Client
 #endif
 #endif
 
-            return ServiceBundle.PlatformProxy.GetWebUiFactory().CreateAuthenticationDialog(parent.CoreUIParent, requestContext);
+            return ServiceBundle.PlatformProxy.GetWebUiFactory().CreateAuthenticationDialog(parent, requestContext);
         }
 
         private void GuardNetCore()

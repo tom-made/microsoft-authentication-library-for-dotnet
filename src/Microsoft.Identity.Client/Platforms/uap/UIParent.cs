@@ -41,14 +41,11 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal CoreUIParent CoreUIParent { get; }
-
         /// <summary>
         /// Default constructor.
         /// </summary>
         public UIParent()
         {
-            CoreUIParent = new CoreUIParent();
         }
 
         #if WINDOWS_APP_RUNTIME
@@ -70,14 +67,12 @@ namespace Microsoft.Identity.Client
         // hidden webview can be used in both WinRT and desktop applications.
         internal bool UseHiddenBrowser
         {
-            get => CoreUIParent.UseHiddenBrowser;
-            set => CoreUIParent.UseHiddenBrowser = value;
+           get; set;
         }
 
         internal bool UseCorporateNetwork
         {
-            get => CoreUIParent.UseCorporateNetwork;
-            set => CoreUIParent.UseCorporateNetwork = value;
+            get; set;
         }
       
     }

@@ -41,9 +41,14 @@ namespace Microsoft.Identity.Client.Platforms.Mac
     {        
         private SemaphoreSlim _returnedUriReady;
         private AuthorizationResult _authorizationResult;
+        private readonly UIParent _uIParent;
+        private readonly RequestContext _requestContext;
 
-        public CoreUIParent CoreUIParent { get; set; }
-        public RequestContext RequestContext { get; set; }
+        public MacEmbeddedWebUI(UIParent uIParent, RequestContext requestContext)
+        {
+            _uIParent = uIParent;
+            _requestContext = requestContext;
+        }
 
         public async Task<AuthorizationResult> AcquireAuthorizationAsync(
             Uri authorizationUri, 
@@ -78,7 +83,7 @@ namespace Microsoft.Identity.Client.Platforms.Mac
                         authorizationUri.AbsoluteUri, 
                         redirectUri.OriginalString, 
                         SetAuthorizationResult);
-                    windowController.Run(CoreUIParent.CallerWindow);
+                    windowController.Run(_uIParent.CallerWindow);
                 });
             }
             catch (Exception ex)

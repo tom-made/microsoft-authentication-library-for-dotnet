@@ -39,8 +39,6 @@ namespace Microsoft.Identity.Client
     /// </summary>     
     public sealed class UIParent
     {
-        internal CoreUIParent CoreUIParent { get; }
-
         static UIParent()
         {
             ModuleInitializer.EnsureModuleInitialized();

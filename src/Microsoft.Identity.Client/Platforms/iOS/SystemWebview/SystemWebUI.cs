@@ -40,16 +40,16 @@ namespace Microsoft.Identity.Client.Platforms.iOS.SystemWebview
 {
     internal class SystemWebUI : WebviewBase, IDisposable
     {
-        public RequestContext RequestContext { get; set; }
-
-        public override async Task<AuthorizationResult> AcquireAuthorizationAsync(Uri authorizationUri, Uri redirectUri,
+        public override async Task<AuthorizationResult> AcquireAuthorizationAsync(
+            Uri authorizationUri, 
+            Uri redirectUri,
             RequestContext requestContext)
         {
             viewController = null;
             InvokeOnMainThread(() =>
             {
                 UIWindow window = UIApplication.SharedApplication.KeyWindow;
-                viewController = CoreUIParent.FindCurrentViewController(window.RootViewController);
+                viewController = UIParent.FindCurrentViewController(window.RootViewController);
             });
 
             returnedUriReady = new SemaphoreSlim(0);

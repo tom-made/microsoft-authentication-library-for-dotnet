@@ -42,20 +42,19 @@ namespace Microsoft.Identity.Client
             ModuleInitializer.EnsureModuleInitialized();
         }
 
-        internal CoreUIParent CoreUIParent { get; }
-
+        #region Public Surface
         /// <summary>
         /// Default constructor. Uses the NSApplication.SharedApplication.MainWindow to parent the web ui.
         /// </summary>
-        public UIParent()
+        public UIParent() : 
+            this(NSApplication.SharedApplication.MainWindow)
         {
-            CoreUIParent = new CoreUIParent(NSApplication.SharedApplication.MainWindow);
         }
 
 #pragma warning disable CS3001 // Argument type is not CLS-compliant
-                              /// <summary>
-                              /// Create a UIParent given an instance of NSWindow, which will be used to parent the web ui.
-                              /// </summary>
+        /// <summary>
+        /// Create a UIParent given an instance of NSWindow, which will be used to parent the web ui.
+        /// </summary>
         public UIParent(NSWindow callerWindow)
 #pragma warning restore CS3001 // Argument type is not CLS-compliant
         {
@@ -64,7 +63,7 @@ namespace Microsoft.Identity.Client
                 callerWindow = NSApplication.SharedApplication.MainWindow;
             }
 
-            CoreUIParent = new CoreUIParent(callerWindow);
+            CallerWindow = callerWindow;
         }
 
 
@@ -91,12 +90,19 @@ namespace Microsoft.Identity.Client
             return false;
         }
 
+        #endregion
+
+        /// <summary>
+        /// Caller NSWindow
+        /// </summary>
+        internal NSWindow CallerWindow { get; }
+
         private static NSWindow ValidateParentObject(object parent)
         {
             if (parent == null)
             {
                 return null;
-            }           
+            }
 
             NSWindow parentActivity = parent as NSWindow;
             if (parentActivity == null)
