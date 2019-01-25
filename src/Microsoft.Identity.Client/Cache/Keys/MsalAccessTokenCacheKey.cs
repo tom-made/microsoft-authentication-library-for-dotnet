@@ -85,29 +85,25 @@ namespace Microsoft.Identity.Client.Cache
 
         /// <summary>
         /// Gets a key that is smaller than 255 characters, which is a limitation for 
-        /// UWP storage. This is done by hashing the scopes and env.
+        /// UWP storage. This is done by hashing the entire key.
         /// </summary>
         /// <remarks>
-        /// accountId - two guids plus separator - 73 chars        
+        /// accountId - 2 guids for AAD i.e. 73 chars, longer for B2C (e.g.  "uid":"db7f18b9-e336-4dfe-adef-c23d321103fb-b2c_1_signupsignin")     
         /// "accesstoken" string - 11 chars
-        /// env - a sha256 string - 44 chars
+        /// env - can be quite long on B2C
         /// clientid - a guid - 36 chars
         /// tenantid - a guid - 36 chars
-        /// scopes - a sha256 string - 44 chars
-        /// delimiters - 4 chars
+        /// scopes - random lenght
+        /// delimiters - 5 chars
         /// total: 248 chars
         /// </remarks>
         public string GetUWPFixedSizeKey()
         {
             var crypto = PlatformProxyFactory.GetPlatformProxy().CryptographyManager;
-            return MsalCacheCommon.GetCredentialKey(
-              _homeAccountId,
-              crypto.CreateSha256Hash(_environment),
-              //_environment,
-              MsalCacheCommon.AccessToken,
-              _clientId,
-              _tenantId,
-              crypto.CreateSha256Hash(_normalizedScopes)); // can't use scopes and env because they are of variable length
+            var variableLenghtKey = this.ToString();
+            var fixedSizeLenghtKey = crypto.CreateSha256Hash(variableLenghtKey);
+
+            return fixedSizeLenghtKey;
         }
         #endregion
 
