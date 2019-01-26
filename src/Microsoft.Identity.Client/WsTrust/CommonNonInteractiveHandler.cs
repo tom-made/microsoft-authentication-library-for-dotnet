@@ -69,6 +69,7 @@ namespace Microsoft.Identity.Client.WsTrust
 
         public async Task<UserRealmDiscoveryResponse> QueryUserRealmDataAsync(string userRealmUriPrefix, string username)
         {
+            // todo: add client headers (e.g. x-client-sku, etc/)
             var userRealmResponse = await _serviceBundle.WsTrustWebRequestManager.GetUserRealmAsync(
                 userRealmUriPrefix,
                 username,

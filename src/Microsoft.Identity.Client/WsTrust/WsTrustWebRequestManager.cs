@@ -141,6 +141,8 @@ namespace Microsoft.Identity.Client.WsTrust
 
             var uri = new UriBuilder(userRealmUriPrefix + userName + "?api-version=1.0").Uri;
 
+            // append client headers? to the body? 
+
             var httpResponse = await _httpManager.SendGetAsync(uri, null, requestContext).ConfigureAwait(false);
             return httpResponse.StatusCode == System.Net.HttpStatusCode.OK 
                 ? JsonHelper.DeserializeFromJson<UserRealmDiscoveryResponse>(httpResponse.Body) 

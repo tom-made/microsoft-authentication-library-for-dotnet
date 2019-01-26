@@ -77,6 +77,7 @@ namespace Microsoft.Identity.Client.Internal.Requests
                 return null;
             }
 
+            // todo: one call is made here...
             var userRealmResponse = await _commonNonInteractiveHandler
                                           .QueryUserRealmDataAsync(AuthenticationRequestParameters.AuthorityInfo.UserRealmUriPrefix, _integratedWindowsAuthParameters.Username)
                                           .ConfigureAwait(false);
