@@ -23,18 +23,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using System.Runtime.Serialization;
 using Microsoft.Identity.Client.Cache;
 using Microsoft.Identity.Client.Utils;
 
-namespace Microsoft.Identity.Client
+namespace Microsoft.Identity.Client.PlatformsCommon.Shared
 {
-    internal class TokenCacheAccessor : ITokenCacheAccessor
+    /// <summary>
+    /// Keeps the 4 token cache dictionaries in memory. Token Cache extensions 
+    /// are responsible for persistance. 
+    /// </summary>
+    /// <remarks>
+    /// Only this accessor is currently compatible with the TokenCache serialization
+    /// </remarks>
+    internal class InMemoryTokenCacheAccessor : ITokenCacheAccessor
     {
         internal readonly IDictionary<string, string> AccessTokenCacheDictionary =
             new ConcurrentDictionary<string, string>();
