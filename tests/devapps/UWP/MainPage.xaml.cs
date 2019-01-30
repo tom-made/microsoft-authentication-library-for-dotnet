@@ -2,12 +2,14 @@
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -31,12 +33,46 @@ namespace UWP
         private readonly static string ClientID = "9058d700-ccd7-4dd4-a029-aec31995add0";
         private readonly static string Authority = "https://login.microsoftonline.com/common/";
         private readonly static IEnumerable<string> Scopes = new[] { "https://graph.windows.net/.default" };
+        private const string Resource = "https://graph.windows.net";
+
 
         public MainPage()
         {
             this.InitializeComponent();
 
             _pca = new PublicClientApplication(ClientID, Authority);
+
+            // custom serialization
+            _pca.UserTokenCache.SetAfterAccess((tokenCacheNotifcation) =>
+            {
+                if (tokenCacheNotifcation.HasStateChanged)
+                {
+                    var cacheFile = ApplicationData.Current.LocalFolder.CreateFileAsync("msal_cache.txt", CreationCollisionOption.ReplaceExisting)
+                        .AsTask()
+                        .GetAwaiter()
+                        .GetResult();
+
+                    File.WriteAllBytes(cacheFile.Path, tokenCacheNotifcation.TokenCache.Serialize());
+
+                }
+
+
+            });
+
+            _pca.UserTokenCache.SetBeforeAccess((tokenCacheNotifcation) =>
+            {
+                var cacheFile = (ApplicationData.Current.LocalFolder.TryGetItemAsync("msal_cache.txt"))
+                    .AsTask()
+                    .GetAwaiter()
+                    .GetResult() as IStorageFile;
+
+                if (cacheFile != null)
+                {
+                    var contents = File.ReadAllBytes(cacheFile.Path);
+                    tokenCacheNotifcation.TokenCache.Deserialize(contents);
+                }
+            });
+
             _authenticationContext = new AuthenticationContext(Authority);
 
 #if ARIA_TELEMETRY_ENABLED
@@ -87,10 +123,18 @@ namespace UWP
             }
         }
 
+        private async void ClearFirstAccountAsync(object sender, RoutedEventArgs e)
+        {
+            var accounts = await _pca.GetAccountsAsync().ConfigureAwait(false);
+            if (accounts.Any())
+            {
+                await _pca.RemoveAsync(accounts.First()).ConfigureAwait(false);
+            }
+        }
+
         private async void ADALButton_ClickAsync(object sender, RoutedEventArgs e)
         {
-            AuthenticationContext authenticationContext = new AuthenticationContext(Authority);
-            var result = await authenticationContext.AcquireTokenAsync(
+            var result = await _authenticationContext.AcquireTokenAsync(
                 "https://graph.windows.net",
                 ClientID,
                 new Uri("urn:ietf:wg:oauth:2.0:oob"),
@@ -100,6 +144,17 @@ namespace UWP
             await DisplayMessageAsync("Signed in User - " + result.UserInfo.DisplayableId + "\nAccessToken: \n" + result.AccessToken)
                 .ConfigureAwait(false);
 
+        }
+
+        private async void ADALSilentButton_ClickAsync(object sender, RoutedEventArgs e)
+        {
+            var result = await _authenticationContext.AcquireTokenSilentAsync(
+                Resource,
+                ClientID)
+                .ConfigureAwait(false);
+
+            await DisplayMessageAsync("Signed in User - " + result.UserInfo.DisplayableId + "\nAccessToken: \n" + result.AccessToken)
+                .ConfigureAwait(false);
         }
 
         private async void AccessTokenSilentButton_ClickAsync(object sender, RoutedEventArgs e)
@@ -128,7 +183,7 @@ namespace UWP
                 var users = await _pca.GetAccountsAsync().ConfigureAwait(false);
                 var user = users.FirstOrDefault();
 
-                result = await _pca.AcquireTokenAsync(Scopes, user, Prompt.SelectAccount, "").ConfigureAwait(false);
+                result = await _pca.AcquireTokenAsync(Scopes).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
