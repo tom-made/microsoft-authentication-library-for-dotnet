@@ -129,6 +129,11 @@ namespace Microsoft.Identity.Client
         /// </summary>
         public const string PlatformNotSupported = "platform_not_supported";
 
+        /// <summary>
+        /// 
+        /// </summary>
+         public const string BrokerReponseHashMismatch = "Unencrypted broker response hash did not match the expected hash";
+
 #if iOS
         /// <summary>
         /// Xamarin.iOS specific. This error indicates that keychain access has not be enabled for the application.

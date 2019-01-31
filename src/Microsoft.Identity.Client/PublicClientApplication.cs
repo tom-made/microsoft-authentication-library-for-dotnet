@@ -619,7 +619,7 @@ namespace Microsoft.Identity.Client
         {
             return AcquireTokenByRefreshTokenParameterBuilder.Create(this, scopes, refreshToken);
         }
-
+        
 #if !ANDROID_BUILDTIME && !iOS_BUILDTIME && !MAC_BUILDTIME
 #if !NET_CORE_BUILDTIME
         /// <summary>

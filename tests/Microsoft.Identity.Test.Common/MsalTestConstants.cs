@@ -131,6 +131,14 @@ namespace Microsoft.Identity.Test.Unit
         public static readonly Account OnPremiseUser = new Account(
             string.Format(CultureInfo.InvariantCulture, "{0}.{1}", OnPremiseUid, OnPremiseUtid), OnPremiseDisplayableId, null);
 
+        // broker tests
+        public const string BrokerExtraQueryParameters = "testQueryParameters";
+        public const string BrokerClaims = "testClaims";
+        
+        public const string BrokerSecret = "testClientSecret";
+
+        public const string BrokerUniqueUserId = "testUniqueUserId";
+
 #if !ANDROID && !iOS && !WINDOWS_APP
         public static readonly ClientCredential OnPremiseCredentialWithSecret = new ClientCredential(ClientSecret);
         public static readonly ClientCredential CredentialWithSecret = new ClientCredential(ClientSecret);

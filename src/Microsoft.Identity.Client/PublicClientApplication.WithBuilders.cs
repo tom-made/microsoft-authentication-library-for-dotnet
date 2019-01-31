@@ -39,6 +39,11 @@ using Microsoft.Identity.Client.Internal.Requests;
 using Microsoft.Identity.Client.TelemetryCore;
 using Microsoft.Identity.Client.UI;
 
+#if iOS
+using Microsoft.Identity.Client.Platforms.iOS;
+#endif
+
+
 namespace Microsoft.Identity.Client
 {
     public partial class PublicClientApplication : IPublicClientApplicationExecutor
@@ -74,7 +79,7 @@ namespace Microsoft.Identity.Client
         /// </remarks>
         [CLSCompliant(false)]
         public AcquireTokenInteractiveParameterBuilder AcquireTokenInteractive(
-            IEnumerable<string> scopes, 
+            IEnumerable<string> scopes,
             object parent)
         {
             return AcquireTokenInteractiveParameterBuilder.Create(this, scopes, parent);
@@ -157,7 +162,6 @@ namespace Microsoft.Identity.Client
         {
             return AcquireTokenByUsernamePasswordParameterBuilder.Create(this, scopes, username, password);
         }
-
         #endregion // ParameterBuilders
 
         #region ParameterExecutors
@@ -171,13 +175,26 @@ namespace Microsoft.Identity.Client
             requestParams.LoginHint = interactiveParameters.LoginHint;
             requestParams.Account = interactiveParameters.Account;
 
-            var handler = new InteractiveRequest(
+            if (requestParams.IsBrokerEnabled)
+            {
+                AcquireTokenByBrokerParameters brokerParameters = new AcquireTokenByBrokerParameters();
+                var handler = new BrokerInteractiveRequest(
                 ServiceBundle,
                 requestParams,
-                interactiveParameters,
-                CreateWebAuthenticationDialog(interactiveParameters, requestParams.RequestContext));
+                brokerParameters);
 
-            return await handler.RunAsync(cancellationToken).ConfigureAwait(false);
+                return await handler.RunAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                var handler = new InteractiveRequest(
+                    ServiceBundle,
+                    requestParams,
+                    interactiveParameters,
+                    CreateWebAuthenticationDialog(interactiveParameters, requestParams.RequestContext));
+
+                return await handler.RunAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
 
         async Task<AuthenticationResult> IPublicClientApplicationExecutor.ExecuteAsync(
@@ -231,6 +248,29 @@ namespace Microsoft.Identity.Client
 #endif
         }
 
+        async Task<AuthenticationResult> IPublicClientApplicationExecutor.ExecuteAsync(
+            AcquireTokenCommonParameters commonParameters,
+            AcquireTokenByBrokerParameters brokerParameters,
+            CancellationToken cancellationToken)
+        {
+#if iOS
+            var requestParams = CreateRequestParameters(commonParameters, UserTokenCacheInternal);
+
+            var handler = new BrokerInteractiveRequest(
+                ServiceBundle,
+                requestParams,
+                brokerParameters);
+
+            return await handler.RunAsync(cancellationToken).ConfigureAwait(false);
+#else
+            await Task.Delay(0, cancellationToken).ConfigureAwait(false);  // this is here to keep compiler from complaining that this method is async when it doesn't await...
+            // TODO: need better wording and proper link to aka.ms
+            throw new PlatformNotSupportedException(
+                "Broker is only supported on mobile platforms (iOS and Android)" +
+                "For more details see ");
+#endif
+        }
+
         #endregion // ParameterExecutors
 
         private IWebUI CreateWebAuthenticationDialog(
@@ -244,7 +284,7 @@ namespace Microsoft.Identity.Client
 #endif
 
 #if WINDOWS_APP || DESKTOP
-// hidden web view can be used in both WinRT and desktop applications.
+            // hidden web view can be used in both WinRT and desktop applications.
             coreUiParent.UseHiddenBrowser = interactiveParameters.Prompt.Equals(Prompt.Never);
 #if WINDOWS_APP
             coreUiParent.UseCorporateNetwork = AppConfig.UseCorporateNetwork;

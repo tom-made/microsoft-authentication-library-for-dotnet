@@ -189,5 +189,10 @@ namespace Microsoft.Identity.Client
         /// On Android, the UIParent constructor with an Activiy parameter must be used. See https://aka.ms/msal-interactive-android
         /// </summary>
         public const string ActivityRequired = "activity_required";
+
+        /// <summary>
+        /// Broker response hash did not match
+        /// </summary>
+        public const string BrokerReponseHashMismatch = "broker_response_hash_mismatch";
     }
 }

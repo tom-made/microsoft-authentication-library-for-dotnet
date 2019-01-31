@@ -234,7 +234,7 @@ namespace Microsoft.Identity.Client.Internal.Requests
             {
                 authorizationRequestParameters[OAuth2Parameter.Prompt] = _interactiveParameters.Prompt.PromptValue;
             }
-            
+
             return authorizationRequestParameters;
         }
 

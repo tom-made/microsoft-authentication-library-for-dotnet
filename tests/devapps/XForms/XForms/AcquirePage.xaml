@@ -5,7 +5,7 @@
 
     <ContentPage.Padding>
         <OnPlatform x:TypeArguments="Thickness">
-            <OnPlatform.iOS>0,20,0,0</OnPlatform.iOS>
+            <!--<OnPlatform.iOS>0,20,0,0</OnPlatform.iOS>-->
         </OnPlatform>
     </ContentPage.Padding>
 
@@ -64,12 +64,11 @@
 
                 </StackLayout>
                 <Button  Text="AcquireSilently" Clicked="OnAcquireSilentlyClickedAsync" TextColor="Blue" Font="Bold,15" HorizontalOptions="Center" AutomationId="acquireTokenSilent_button"/>
-
             </StackLayout>
         </Frame>
 
         <Label x:Name="acquireResponseTitleLabel" Text="Result:" Font="Bold,15"  AutomationId="testResult"/>
-        
+
         <ScrollView Orientation="Vertical" VerticalOptions="FillAndExpand">
             <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
                 <Frame OutlineColor="Black" Padding="10">
@@ -79,5 +78,5 @@
         </ScrollView>
 
     </StackLayout>
-    
+
 </ContentPage>

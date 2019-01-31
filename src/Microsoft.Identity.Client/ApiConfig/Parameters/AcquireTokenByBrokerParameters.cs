@@ -25,37 +25,24 @@
 // 
 // ------------------------------------------------------------------------------
 
-using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Identity.Client.ApiConfig.Parameters;
+using Microsoft.Identity.Client.Core;
 
-namespace Microsoft.Identity.Client.ApiConfig
+namespace Microsoft.Identity.Client.ApiConfig.Parameters
 {
-    internal interface IPublicClientApplicationExecutor
+    internal class AcquireTokenByBrokerParameters : IAcquireTokenParameters
     {
-        Task<AuthenticationResult> ExecuteAsync(
-            AcquireTokenCommonParameters commonParameters,
-            AcquireTokenInteractiveParameters interactiveParameters,
-            CancellationToken cancellationToken);
+        public void LogParameters(ICoreLogger logger)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("=== BrokerParameters Data ===");
+            logger.Info(builder.ToString());
+        }
 
-        Task<AuthenticationResult> ExecuteAsync(
-            AcquireTokenCommonParameters commonParameters,
-            AcquireTokenWithDeviceCodeParameters withDeviceCodeParameters,
-            CancellationToken cancellationToken);
-
-        Task<AuthenticationResult> ExecuteAsync(
-            AcquireTokenCommonParameters commonParameters,
-            AcquireTokenByIntegratedWindowsAuthParameters integratedWindowsAuthParameters,
-            CancellationToken cancellationToken);
-
-        Task<AuthenticationResult> ExecuteAsync(
-            AcquireTokenCommonParameters commonParameters,
-            AcquireTokenByUsernamePasswordParameters usernamePasswordParameters,
-            CancellationToken cancellationToken);
-
-         Task<AuthenticationResult> ExecuteAsync(
-            AcquireTokenCommonParameters commonParameters,
-            AcquireTokenByBrokerParameters acquireTokenParameters,
-            CancellationToken cancellationToken);
+        public Dictionary<string, string> BrokerPayload {get; set;} = new Dictionary<string, string>();
     }
 }

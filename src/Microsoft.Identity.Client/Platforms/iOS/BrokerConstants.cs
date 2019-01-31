@@ -39,5 +39,23 @@ namespace Microsoft.Identity.Client.Platforms.iOS
         public const string DeviceAuthChallengeRedirect = "urn:http-auth:PKeyAuth";
         public const string ChallengeHeaderKey = "x-ms-PKeyAuth";
         public const string ChallengeHeaderValue = "1.0";
+
+        public const string BrokerKey = "broker_key";
+        // new parameter to specify the protocol version, should be "3"
+        public const string MsgProtocolVer = "msg_protocol_ver";
+        public const string Claims = "claims";
+        public const string SkipCache = "skip_cache";
+        public const string AppLink = "app_link";
+        public const string InvokeBroker = "msauthv2://broker?";
+        public const string Code = "code";
+        public const string BrokerError = "broker_error";
+        public const string Error = "error";
+        public const string ErrorDescription = "error_description";
+        public const string ExpectedHash = "hash";
+        public const string EncryptedResponsed = "response";
+
+          //broker related log messages
+        public const string InvokeIosBrokerAppLink = "Invoking the iOS broker app link";
+        public const string InvokeTheIosBroker = "Invoking the iOS broker";
     }
 }
