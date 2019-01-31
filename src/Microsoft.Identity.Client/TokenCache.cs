@@ -104,12 +104,6 @@ namespace Microsoft.Identity.Client
             TokenCacheAccessor = new TelemetryTokenCacheAccessor(ServiceBundle.TelemetryManager, baseTokenCacheAccessor);
             LegacyCachePersistence = ServiceBundle.PlatformProxy.CreateLegacyCachePersistence();
             _defaultTokenCacheBlobStorage = ServiceBundle.PlatformProxy.CreateTokenCacheBlobStorage();
-
-            if (!(_defaultTokenCacheBlobStorage is NullTokenCacheBlobStorage) &&
-                !(baseTokenCacheAccessor is InMemoryTokenCacheAccessor))
-            {
-                throw new InvalidOperationException("Only the InMemoryTokenCacheAccessor should be used when defining a blob storage strategy.");
-            }
         }
 
         /// <summary>
@@ -1328,6 +1322,13 @@ namespace Microsoft.Identity.Client
             }
         }
 
+        private bool UserHasConfiguredBlobSerialization()
+        {
+            return _userConfiguredBeforeAccess != null ||
+                _userConfiguredBeforeAccess != null ||
+                _userConfiguredBeforeWrite != null;
+        }
+
 #if !ANDROID_BUILDTIME && !iOS_BUILDTIME 
         // todo: where to put this documentation
         ///// <summary>
@@ -1347,7 +1348,7 @@ namespace Microsoft.Identity.Client
         public void SetBeforeAccess(TokenCacheCallback beforeAccess)
         {
             GuardOnMobilePlatforms();
-            _userConfiguredBeforeAccess = beforeAccess;
+            BeforeAccess = beforeAccess;
         }
 
         /// <summary>
@@ -1362,7 +1363,7 @@ namespace Microsoft.Identity.Client
         public void SetAfterAccess(TokenCacheCallback afterAccess)
         {
             GuardOnMobilePlatforms();
-            _userConfiguredAfterAccess = afterAccess;
+            AfterAccess = afterAccess;
         }
 
         /// <summary>
@@ -1374,15 +1375,9 @@ namespace Microsoft.Identity.Client
         public void SetBeforeWrite(TokenCacheCallback beforeWrite)
         {
             GuardOnMobilePlatforms();
-            _userConfiguredBeforeWrite = beforeWrite;
+            BeforeWrite = beforeWrite;
         }
 
-        private bool UserHasConfiguredBlobSerialization()
-        {
-            return _userConfiguredBeforeAccess != null ||
-                _userConfiguredBeforeAccess != null ||
-                _userConfiguredBeforeWrite != null;
-        }
 
         private const string AccessTokenKey = "access_tokens";
         private const string RefreshTokenKey = "refresh_tokens";
