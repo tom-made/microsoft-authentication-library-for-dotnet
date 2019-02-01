@@ -258,7 +258,7 @@ namespace Microsoft.Identity.Client.AppConfig
 
             if (!Guid.TryParse(Config.ClientId, out Guid clientIdGuid))
             {
-                throw new InvalidOperationException(CoreErrorMessages.ClientIdMustBeAGuid);
+                //throw new InvalidOperationException(CoreErrorMessages.ClientIdMustBeAGuid);
             }
 
 

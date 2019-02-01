@@ -46,6 +46,7 @@ using Microsoft.Identity.Test.Common.Core.Helpers;
 using Microsoft.Identity.Test.Common.Core.Mocks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Identity.Test.Common;
+using Microsoft.Identity.Client.AppConfig;
 
 namespace Microsoft.Identity.Test.Unit.RequestsTests
 {
@@ -209,6 +210,87 @@ namespace Microsoft.Identity.Test.Unit.RequestsTests
                 Assert.AreEqual(1, cache.Accessor.AccountCount);
                 Assert.AreEqual(1, cache.Accessor.IdTokenCount);
                 Assert.AreEqual(1, cache.Accessor.RefreshTokenCount);
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("DeviceCodeRequestTests")]
+        public void AcquireTokenFromAdfsServer()
+        {
+            using (var httpManager = new MockHttpManager())
+            {
+                PublicClientApplication app = PublicClientApplicationBuilder.Create("http://my/client")
+                                                                            .WithAdfsAuthority("https://fs.sqltestd.dft.com/adfs", true)
+                                                                            .WithRedirectUri("https://mytestmachine/testRedirect")
+                                                                            //.WithHttpManager(httpManager)
+                                                                            .BuildConcrete();
+
+
+                /*MsalMockHelpers.ConfigureMockWebUI(
+                                app.ServiceBundle.PlatformProxy,
+                                new AuthorizationResult(AuthorizationStatus.Success, app.AppConfig.RedirectUri + "?code=some-code"));
+
+                _tokenCacheHelper.PopulateCache(app.UserTokenCacheInternal.Accessor);
+
+                httpManager.AddMockHandler(
+                new MockHttpMessageHandler
+                {
+                    Method = HttpMethod.Get,
+                    Url = "https://fs.contoso.com/.well-known/webfinger",
+                    QueryParams = new Dictionary<string, string>
+                    {
+                            {"resource", "https://fs.contoso.com"},
+                            {"rel", "http://schemas.microsoft.com/rel/trusted-realm"}
+                    },
+                    ResponseMessage = MockHelpers.CreateSuccessWebFingerResponseMessage("https://fs.contoso.com")
+                });
+
+                //add mock response for tenant endpoint discovery
+                httpManager.AddMockHandler(new MockHttpMessageHandler
+                {
+                    Method = HttpMethod.Get,
+                    ResponseMessage = MockHelpers.CreateOpenIdConfigurationResponse(MsalTestConstants.OnPremiseAuthority)
+                });
+
+                httpManager.AddMockHandler(new MockHttpMessageHandler
+                {
+                    Method = HttpMethod.Post,
+                    ResponseMessage = MockHelpers.CreateAdfsSuccessTokenResponseMessage()
+                });*/
+
+                SortedSet<string> scopes = new SortedSet<string>();
+                scopes.Add("https://sqltest.SQLTESTD.dft.com/fedpassive//email");
+                var result = app.AcquireTokenWithDeviceCodeAsync(scopes, deviceCodeResult =>
+                {
+                    //RunAutomatedDeviceCodeFlow(deviceCodeResult, labResponse.User);
+
+                    Console.WriteLine(deviceCodeResult);
+                    return Task.FromResult(0);
+                }).ConfigureAwait(false);
+
+                //AuthenticationResult result = app.AcquireTokenAsync(scopes).Result;
+                Assert.IsNotNull(result);
+                /*Assert.IsNotNull(result.Account);
+                Assert.AreEqual(MsalTestConstants.OnPremiseUniqueId, result.UniqueId);
+                Assert.AreEqual(new AccountId(MsalTestConstants.OnPremiseUniqueId), result.Account.HomeAccountId);
+                Assert.AreEqual(MsalTestConstants.OnPremiseDisplayableId, result.Account.Username);*/
+
+                //Find token in cache now
+
+                //AuthenticationResult cachedAuth = null;
+               /* try
+                {
+                    cachedAuth = app.AcquireTokenSilentAsync(scopes, ).Result;
+                }
+                catch
+                {
+                    Assert.Fail("Did not find access token");
+                }
+                Assert.IsNotNull(cachedAuth);*/
+                /*Assert.IsNotNull(cachedAuth.Account);
+                Assert.AreEqual(MsalTestConstants.OnPremiseUniqueId, cachedAuth.UniqueId);
+                Assert.AreEqual(new AccountId(MsalTestConstants.OnPremiseUniqueId), cachedAuth.Account.HomeAccountId);
+                Assert.AreEqual(MsalTestConstants.OnPremiseDisplayableId, cachedAuth.Account.Username);*/
             }
         }
 
