@@ -43,6 +43,6 @@ namespace Microsoft.Identity.Client.ApiConfig.Parameters
             logger.Info(builder.ToString());
         }
 
-        public Dictionary<string, string> BrokerPayload {get; set;} = new Dictionary<string, string>();
+        public Dictionary<string, string> BrokerPayload {get; set;} = new Dictionary<string, string>();        
     }
 }

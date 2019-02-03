@@ -85,29 +85,5 @@ namespace Microsoft.Identity.Test.Common.Core.Mocks
                 Account = account
             };
         }
-
-        public AuthenticationRequestParameters CreateBrokerAuthenticationRequestParameters(
-            string authority, 
-            SortedSet<string> scopes, 
-            IAccount account,
-            Dictionary<string, string> extraQueryParameters,
-            ITokenCacheInternal tokenCache = null)
-        {
-            var commonParameters = new AcquireTokenCommonParameters
-            {
-                Scopes = scopes ?? MsalTestConstants.Scope,
-                ExtraQueryParameters = extraQueryParameters ?? new Dictionary<string, string>()
-            };
-
-            return new AuthenticationRequestParameters(
-                ServiceBundle,
-                Authority.CreateAuthority(ServiceBundle, authority),
-                tokenCache,
-                commonParameters,
-                RequestContext.CreateForTest(ServiceBundle))
-            {
-                Account = account
-            };
-        }
     }
 }

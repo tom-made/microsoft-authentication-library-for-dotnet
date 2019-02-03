@@ -32,13 +32,13 @@ using System.Threading.Tasks;
 using Microsoft.Identity.Client.Utils;
 using UIKit;
 using Foundation;
-using Microsoft.Identity.Client.Internal;
 using System;
 using CoreFoundation;
 using Microsoft.Identity.Client.OAuth2;
 using Microsoft.Identity.Client.Internal.Broker;
 using Microsoft.Identity.Client.UI;
 using Microsoft.Identity.Client.AppConfig;
+using Microsoft.Identity.Client.Exceptions;
 
 namespace Microsoft.Identity.Client.Platforms.iOS
 {
@@ -51,7 +51,15 @@ namespace Microsoft.Identity.Client.Platforms.iOS
 
         private static NSUrl brokerResponse = null;
         private readonly ApplicationConfiguration brokerRequest;
+        private Dictionary<string, string> _brokerPayload;
+
+        private readonly ICoreLogger _logger;
         private IServiceBundle _serviceBundle;
+
+        public iOSBroker(ICoreLogger logger)
+        {
+            _logger = logger;
+        }
 
         public bool CanInvokeBroker
         {
@@ -80,53 +88,74 @@ namespace Microsoft.Identity.Client.Platforms.iOS
         public async Task<MsalTokenResponse> AcquireTokenUsingBrokerAsync(Dictionary<string, string> brokerPayload, IServiceBundle serviceBundle)
         {
             _serviceBundle = serviceBundle;
-            if (brokerPayload.ContainsKey(BrokerParameter.SilentBrokerFlow))
-            {
-                throw new MsalUiRequiredException("something", "something else");
-            }
+            _brokerPayload = brokerPayload;
+
+            CheckBrokerPayloadForSilentFlow();
+
+            AddIosSpecificParametersToPayload();
 
             brokerResponse = null;
             brokerResponseReady = new SemaphoreSlim(0);
 
-            // call broker
-            string base64EncodedString = Base64UrlHelpers.Encode(BrokerKeyHelper.GetRawBrokerKey());
-            brokerPayload[BrokerConstants.BrokerKey] = base64EncodedString;
-            brokerPayload[BrokerConstants.MsgProtocolVer] = "3";
+            InvokeIosBroker();
 
-            if (brokerPayload.ContainsKey(BrokerConstants.Claims))
+            await brokerResponseReady.WaitAsync().ConfigureAwait(false);
+
+            return ProcessBrokerResponse();
+        }
+
+        private void CheckBrokerPayloadForSilentFlow()
+        {
+            if (_brokerPayload.ContainsKey(BrokerParameter.SilentBrokerFlow))
             {
-                brokerPayload.Add(BrokerConstants.SkipCache, "YES");
-                string claims = Base64UrlHelpers.Encode(brokerPayload[BrokerParameter.Claims]); //TODO: check this
-                brokerPayload[BrokerParameter.Claims] = claims;
+                throw new MsalUiRequiredException(MsalError.FailedToAcquireTokenSilently, MsalErrorMessage.FailedToAcquireTokenSilently);
             }
+        }
 
-            if (brokerPayload.ContainsKey(BrokerParameter.BrokerInstallUrl))
+        private void AddIosSpecificParametersToPayload()
+        {
+            string base64EncodedString = Base64UrlHelpers.Encode(BrokerKeyHelper.GetRawBrokerKey(_logger));
+            _brokerPayload[iOSBrokerConstants.BrokerKey] = base64EncodedString;
+            _brokerPayload[iOSBrokerConstants.MsgProtocolVer] = "3";
+
+            if (_brokerPayload.ContainsKey(iOSBrokerConstants.Claims))
             {
-                string url = brokerPayload[BrokerParameter.BrokerInstallUrl];
+                _brokerPayload.Add(iOSBrokerConstants.SkipCache, "YES");
+                string claims = Base64UrlHelpers.Encode(_brokerPayload[BrokerParameter.Claims]); //TODO: check this
+                _brokerPayload[BrokerParameter.Claims] = claims;
+            }
+        }
+
+        private void InvokeIosBroker()
+        {
+            if (_brokerPayload.ContainsKey(BrokerParameter.BrokerInstallUrl))
+            {
+                string url = _brokerPayload[BrokerParameter.BrokerInstallUrl];
                 Uri uri = new Uri(url);
                 string query = uri.Query;
+
                 if (query.StartsWith("?", StringComparison.OrdinalIgnoreCase))
                 {
                     query = query.Substring(1);
                 }
-                
-                //log something interesting here ("Invoking the iOS broker app link");
+
+                _logger.Info(iOSBrokerConstants.InvokeIosBrokerAppLink);
 
                 Dictionary<string, string> keyPair = CoreHelpers.ParseKeyValueList(query, '&', true, false, null);
-                DispatchQueue.MainQueue.DispatchAsync(() => UIApplication.SharedApplication.OpenUrl(new NSUrl(keyPair[BrokerConstants.AppLink])));
+
+                DispatchQueue.MainQueue.DispatchAsync(() => UIApplication.SharedApplication.OpenUrl(new NSUrl(keyPair[iOSBrokerConstants.AppLink])));
 
                 throw new MsalClientException(MsalErrorIOSEx.BrokerApplicationRequired, MsalErrorMessageIOSEx.BrokerApplicationRequired);
             }
 
             else
             {
-                //log something interesting here ("Invoking the iOS broker");
-                NSUrl url = new NSUrl(BrokerConstants.InvokeBroker + brokerPayload.ToQueryParameter());
+                _logger.Info(iOSBrokerConstants.InvokeTheIosBroker);
+
+                NSUrl url = new NSUrl(iOSBrokerConstants.InvokeBroker + _brokerPayload.ToQueryParameter());
+
                 DispatchQueue.MainQueue.DispatchAsync(() => UIApplication.SharedApplication.OpenUrl(url));
             }
-
-            await brokerResponseReady.WaitAsync().ConfigureAwait(false);
-            return ProcessBrokerResponse();
         }
 
         private MsalTokenResponse ProcessBrokerResponse()
@@ -138,9 +167,9 @@ namespace Microsoft.Identity.Client.Platforms.iOS
             {
                 string[] keyValue = pair.Split('=');
                 responseDictionary[keyValue[0]] = CoreHelpers.UrlDecode(keyValue[1]);
-                if (responseDictionary[keyValue[0]].Equals("(null)", StringComparison.OrdinalIgnoreCase) && keyValue[0].Equals(BrokerConstants.Code, StringComparison.OrdinalIgnoreCase))
+                if (responseDictionary[keyValue[0]].Equals("(null)", StringComparison.OrdinalIgnoreCase) && keyValue[0].Equals(iOSBrokerConstants.Code, StringComparison.OrdinalIgnoreCase))
                 {
-                    responseDictionary[BrokerConstants.Error] = BrokerConstants.BrokerError;
+                    responseDictionary[iOSBrokerConstants.Error] = iOSBrokerConstants.BrokerError;
                 }
             }
 
@@ -151,15 +180,15 @@ namespace Microsoft.Identity.Client.Platforms.iOS
         {
             MsalTokenResponse tokenResponse = new MsalTokenResponse();
 
-            if (responseDictionary.ContainsKey(BrokerConstants.Error) || responseDictionary.ContainsKey(BrokerConstants.ErrorDescription))
+            if (responseDictionary.ContainsKey(iOSBrokerConstants.Error) || responseDictionary.ContainsKey(iOSBrokerConstants.ErrorDescription))
             {
                 tokenResponse.CreateFromBrokerResponse(responseDictionary);
             }
             else
             {
-                string expectedHash = responseDictionary[BrokerConstants.ExpectedHash];
-                string encryptedResponse = responseDictionary[BrokerConstants.EncryptedResponsed];
-                string decryptedResponse = BrokerKeyHelper.DecryptBrokerResponse(encryptedResponse);
+                string expectedHash = responseDictionary[iOSBrokerConstants.ExpectedHash];
+                string encryptedResponse = responseDictionary[iOSBrokerConstants.EncryptedResponsed];
+                string decryptedResponse = BrokerKeyHelper.DecryptBrokerResponse(encryptedResponse, _logger);
                 string responseActualHash = _serviceBundle.PlatformProxy.CryptographyManager.CreateSha256Hash(decryptedResponse);
                 byte[] rawHash = Convert.FromBase64String(responseActualHash);
                 string hash = BitConverter.ToString(rawHash);
@@ -182,10 +211,11 @@ namespace Microsoft.Identity.Client.Platforms.iOS
 
             var dateTimeOffset = new DateTimeOffset(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc));
             dateTimeOffset = dateTimeOffset.AddSeconds(tokenResponse.ExpiresIn);
+            
             return tokenResponse;
         }
 
-         public static void SetBrokerResponse(NSUrl responseUrl)
+        public static void SetBrokerResponse(NSUrl responseUrl)
         {
             brokerResponse = responseUrl;
             brokerResponseReady.Release();

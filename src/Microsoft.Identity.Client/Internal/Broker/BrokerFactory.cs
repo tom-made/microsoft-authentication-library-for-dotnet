@@ -24,19 +24,28 @@
 // THE SOFTWARE.
 // 
 // ------------------------------------------------------------------------------
+
 #if iOS
 using Microsoft.Identity.Client.Platforms.iOS;
 #endif
+using Microsoft.Identity.Client.Core;
+using System;
 
 namespace Microsoft.Identity.Client.Internal.Broker
 {
     internal class BrokerFactory
     {
         // thread safety ensured by implicit LazyThreadSafetyMode.ExecutionAndPublication
-        public IBroker CreateBrokerFacade()
+        public IBroker CreateBrokerFacade(ICoreLogger logger)
         {
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
 #if iOS
-            return new iOSBroker();
+            return new iOSBroker(logger);
+#elif ANDROID
+            return new NullBroker();
 #else
             return new NullBroker();
 #endif

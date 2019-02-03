@@ -27,7 +27,7 @@
 
 namespace Microsoft.Identity.Client.Platforms.iOS
 {
-    internal class BrokerConstants
+    internal class iOSBrokerConstants
     {
         public const string ChallengeResponseHeader = "Authorization";
         public const string ChallengeResponseType = "PKeyAuth";
@@ -41,7 +41,6 @@ namespace Microsoft.Identity.Client.Platforms.iOS
         public const string ChallengeHeaderValue = "1.0";
 
         public const string BrokerKey = "broker_key";
-        // new parameter to specify the protocol version, should be "3"
         public const string MsgProtocolVer = "msg_protocol_ver";
         public const string Claims = "claims";
         public const string SkipCache = "skip_cache";
@@ -54,8 +53,16 @@ namespace Microsoft.Identity.Client.Platforms.iOS
         public const string ExpectedHash = "hash";
         public const string EncryptedResponsed = "response";
 
-          //broker related log messages
+        public const string BrokerKeyService = "Broker Key Service";
+        public const string BrokerKeyAccount = "Broker Key Account";
+        public const string BrokerKeyLabel = "Broker Key Label";
+        public const string BrokerKeyComment = "Broker Key Comment";
+        public const string BrokerKeyStorageDescription = "Storage for broker key";
+        public const string LocalSettingsContainerName = "MicrosoftIdentityClient";
+
+        // broker related log messages
         public const string InvokeIosBrokerAppLink = "Invoking the iOS broker app link";
         public const string InvokeTheIosBroker = "Invoking the iOS broker";
+        public const string FailedToSaveBrokerKey = "Failed to save broker key. Security Keychain Status code: ";
     }
 }

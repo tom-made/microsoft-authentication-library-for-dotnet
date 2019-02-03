@@ -25,7 +25,7 @@
 // 
 // ------------------------------------------------------------------------------
 
-namespace Microsoft.Identity.Client.Internal
+namespace Microsoft.Identity.Client.Internal.Broker
 {
     //these are copied from ADAL and added in ones for MSAL broker...
     //some are not in the list, not sure what they are for.

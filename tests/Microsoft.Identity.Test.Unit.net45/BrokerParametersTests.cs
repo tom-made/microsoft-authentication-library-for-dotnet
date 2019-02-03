@@ -26,24 +26,13 @@
 // ------------------------------------------------------------------------------
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Identity.Test.Common;
 using Microsoft.Identity.Client.Utils;
 using Microsoft.Identity.Test.Common.Core.Mocks;
 using Microsoft.Identity.Client.ApiConfig.Parameters;
 using Microsoft.Identity.Client.Internal.Requests;
-using Microsoft.Identity.Client;
-using System.Threading;
-using Microsoft.Identity.Client.Internal;
 using Microsoft.Identity.Client.Core;
-using Microsoft.Identity.Client.OAuth2;
-using System.Net.Http;
-using System.Net;
-using Microsoft.Identity.Test.Unit.RequestsTests;
+using Microsoft.Identity.Client.Internal.Broker;
 
 namespace Microsoft.Identity.Test.Unit
 {
@@ -56,8 +45,7 @@ namespace Microsoft.Identity.Test.Unit
             TestCommon.ResetStateAndInitMsal();
         }
 
-        private const string Authority = "https://login.microsoftonline.com/test";
-        public static readonly string CanonicalizedAuthority = Client.AppConfig.AuthorityInfo.CanonicalizeAuthorityUri(CoreHelpers.UrlDecode(Authority));
+        public static readonly string CanonicalizedAuthority = Client.AppConfig.AuthorityInfo.CanonicalizeAuthorityUri(CoreHelpers.UrlDecode(MsalTestConstants.AuthorityTestTenant));
 
         [TestMethod]
         [Description("Test setting of the broker parameters in the BrokerInteractiveRequest constructor.")]
@@ -65,22 +53,20 @@ namespace Microsoft.Identity.Test.Unit
         {
             using (var harness = new MockHttpAndServiceBundle())
             {
-                var parameters = CreateAuthenticationParametersAndSetupMocks(
-                    harness,
-                    out HashSet<string> expectedScopes);
+                // Arrange
+                var parameters = harness.CreateAuthenticationRequestParameters(
+                    MsalTestConstants.AuthorityTestTenant,
+                    null,
+                    null,
+                    null,
+                    null);
 
-                var cache = parameters.TokenCache;
-
-                // Check that cache is empty
-                Assert.AreEqual(0, cache.Accessor.AccessTokenCount);
-                Assert.AreEqual(0, cache.Accessor.AccountCount);
-                Assert.AreEqual(0, cache.Accessor.IdTokenCount);
-                Assert.AreEqual(0, cache.Accessor.RefreshTokenCount);
-
+                // Act
                 var brokerParameters = new AcquireTokenByBrokerParameters();
 
                 var request = new BrokerInteractiveRequest(harness.ServiceBundle, parameters, brokerParameters);
 
+                // Assert
                 Assert.AreEqual(9, brokerParameters.BrokerPayload.Count);
 
                 Assert.AreEqual(CanonicalizedAuthority, brokerParameters.BrokerPayload[BrokerParameter.Authority]);
@@ -91,33 +77,14 @@ namespace Microsoft.Identity.Test.Unit
                 Assert.AreEqual(MsalIdHelper.GetMsalVersion(), brokerParameters.BrokerPayload[BrokerParameter.ClientVersion]);
                 Assert.AreEqual("NO", brokerParameters.BrokerPayload[BrokerParameter.Force]);
                 Assert.AreEqual(string.Empty, brokerParameters.BrokerPayload[BrokerParameter.Username]);
-                
+
                 Assert.AreEqual(MsalTestConstants.RedirectUri, brokerParameters.BrokerPayload[BrokerParameter.RedirectUri]);
 
-               // Assert.AreEqual(MsalTestConstants.BrokerExtraQueryParameters, brokerParameters.BrokerPayload[BrokerParameter.ExtraQp]);
+                // Assert.AreEqual(MsalTestConstants.BrokerExtraQueryParameters, brokerParameters.BrokerPayload[BrokerParameter.ExtraQp]);
 
-               // Assert.AreEqual(MsalTestConstants.BrokerClaims, brokerParameters.BrokerPayload[BrokerParameter.Claims]);
-               Assert.AreEqual(BrokerParameter.OidcScopesValue, brokerParameters.BrokerPayload[BrokerParameter.ExtraOidcScopes]);
+                // Assert.AreEqual(MsalTestConstants.BrokerClaims, brokerParameters.BrokerPayload[BrokerParameter.Claims]);
+                Assert.AreEqual(BrokerParameter.OidcScopesValue, brokerParameters.BrokerPayload[BrokerParameter.ExtraOidcScopes]);
             }
-        }
-
-        private AuthenticationRequestParameters CreateAuthenticationParametersAndSetupMocks(
-           MockHttpAndServiceBundle harness,
-           out HashSet<string> expectedScopes)
-        {
-            var cache = new TokenCache(harness.ServiceBundle);
-            Dictionary<string, string> expectedQueryParameters = new Dictionary<string, string>();
-            expectedQueryParameters.Add(BrokerParameter.ExtraQp, MsalTestConstants.BrokerExtraQueryParameters);
-
-            var parameters = harness.CreateBrokerAuthenticationRequestParameters(Authority, null, null, expectedQueryParameters, cache);
-
-            expectedScopes = new HashSet<string>();
-            expectedScopes.UnionWith(MsalTestConstants.Scope);
-            expectedScopes.Add(OAuth2Value.ScopeOfflineAccess);
-            expectedScopes.Add(OAuth2Value.ScopeProfile);
-            expectedScopes.Add(OAuth2Value.ScopeOpenId);
-
-            return parameters;
         }
     }
 }

@@ -29,22 +29,13 @@ using Microsoft.Identity.Client.ApiConfig.Parameters;
 using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Internal.Broker;
 using Microsoft.Identity.Client.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Client.Internal.Requests
 {
     internal class BrokerSilentRequest : SilentRequest
     {
-        protected IBroker BrokerHelper { get; }
-
         BrokerFactory brokerFactory = new BrokerFactory();
-
-        private Dictionary<string, string> _brokerParameters = new Dictionary<string, string>();
+        protected IBroker BrokerHelper { get; }
 
         public BrokerSilentRequest(
            IServiceBundle serviceBundle,
@@ -52,19 +43,18 @@ namespace Microsoft.Identity.Client.Internal.Requests
            AcquireTokenByBrokerParameters brokerParameters)
            : base(serviceBundle, authenticationRequestParameters, brokerParameters)
         {
-            BrokerHelper = brokerFactory.CreateBrokerFacade();
-            _brokerParameters = brokerParameters.BrokerPayload;
+            BrokerHelper = brokerFactory.CreateBrokerFacade(serviceBundle.DefaultLogger);
 
-            _brokerParameters.Add(BrokerParameter.Username, authenticationRequestParameters.Account?.Username ?? string.Empty);
-            _brokerParameters.Add(BrokerParameter.SilentBrokerFlow, null);
-            _brokerParameters.Add(BrokerParameter.Authority, authenticationRequestParameters.Authority.AuthorityInfo.CanonicalAuthority);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.SilentBrokerFlow, null);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.Username, authenticationRequestParameters.Account?.Username ?? string.Empty);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.Authority, authenticationRequestParameters.Authority.AuthorityInfo.CanonicalAuthority);
 
             string scopes = ScopeHelper.ConvertSortedSetScopesToString(authenticationRequestParameters.Scope);
-            _brokerParameters.Add(BrokerParameter.RequestScopes, scopes);
-            _brokerParameters.Add(BrokerParameter.ClientId, authenticationRequestParameters.ClientId);
-            _brokerParameters.Add(BrokerParameter.CorrelationId, ServiceBundle.DefaultLogger.CorrelationId.ToString());
-            _brokerParameters.Add(BrokerParameter.ClientVersion, MsalIdHelper.GetMsalVersion());
-            _brokerParameters.Add(BrokerParameter.ExtraOidcScopes, BrokerParameter.OidcScopesValue);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.RequestScopes, scopes);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.ClientId, authenticationRequestParameters.ClientId);
+            brokerParameters.BrokerPayload.Add(BrokerParameter.CorrelationId, ServiceBundle.DefaultLogger.CorrelationId.ToString());
+            brokerParameters.BrokerPayload.Add(BrokerParameter.ClientVersion, MsalIdHelper.GetMsalVersion());
+            brokerParameters.BrokerPayload.Add(BrokerParameter.ExtraOidcScopes, BrokerParameter.OidcScopesValue);
         }
     }
 }

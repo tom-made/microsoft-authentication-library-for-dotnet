@@ -130,16 +130,5 @@ namespace Microsoft.Identity.Client.OAuth2
                     : null,
             };
         }
-
-        internal MsalTokenResponse GetBrokerResult(DateTimeOffset expiresOn, DateTimeOffset extendedExpiresOn)
-        {
-           MsalTokenResponse tokenResponse = new MsalTokenResponse();
-            return tokenResponse;
-
-            //if (AccessToken != null)
-            //{
-            //    var result = new AuthenticationResult
-            //}
-        }
     }
 }

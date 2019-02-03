@@ -43,7 +43,6 @@ using Microsoft.Identity.Client.UI;
 using Microsoft.Identity.Client.Platforms.iOS;
 #endif
 
-
 namespace Microsoft.Identity.Client
 {
     public partial class PublicClientApplication : IPublicClientApplicationExecutor

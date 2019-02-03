@@ -77,6 +77,12 @@ namespace Microsoft.Identity.Client
         /// </summary>
         public const string FailedToRefreshToken = "failed_to_refresh_token";
 
+        
+        /// <summary>
+        /// Failed to acquire token silently. Used in broker scenarios.
+        /// </summary>
+        public const string FailedToAcquireTokenSilently = "failed_to_acquire_token_silently";
+
         /// <summary>
         /// RedirectUri validation failed.
         /// </summary>

@@ -26,38 +26,28 @@
 //------------------------------------------------------------------------------
 
 using Foundation;
+using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Utils;
 using Security;
-using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Client.Platforms.iOS
 {
     internal class BrokerKeyHelper
     {
-        private const string LocalSettingsContainerName = "MicrosoftIdentityClient";
-
-        internal static string GetBase64UrlBrokerKey()
-        {
-            return Base64UrlHelpers.Encode(GetRawBrokerKey());
-        }
-
-        internal static byte[] GetRawBrokerKey()
+        internal static byte[] GetRawBrokerKey(ICoreLogger logger)
         {
             byte[] brokerKey = null;
             SecRecord record = new SecRecord(SecKind.GenericPassword)
             {
-                Generic = NSData.FromString(LocalSettingsContainerName),
-                Service = "Broker Key Service",
-                Account = "Broker Key Account",
-                Label = "Broker Key Label",
-                Comment = "Broker Key Comment",
-                Description = "Storage for broker key"
+                Generic = NSData.FromString(iOSBrokerConstants.LocalSettingsContainerName),
+                Service = iOSBrokerConstants.BrokerKeyService,
+                Account = iOSBrokerConstants.BrokerKeyAccount,
+                Label = iOSBrokerConstants.BrokerKeyLabel,
+                Comment = iOSBrokerConstants.BrokerKeyComment,
+                Description = iOSBrokerConstants.BrokerKeyStorageDescription
             };
 
             NSData key = SecKeyChain.QueryAsData(record);
@@ -69,19 +59,19 @@ namespace Microsoft.Identity.Client.Platforms.iOS
                 NSData byteData = NSData.FromArray(rawBytes);
                 record = new SecRecord(SecKind.GenericPassword)
                 {
-                    Generic = NSData.FromString(LocalSettingsContainerName),
-                    Service = "Broker Key Service",
-                    Account = "Broker Key Account",
-                    Label = "Broker Key Label",
-                    Comment = "Broker Key Comment",
-                    Description = "Storage for broker key",
+                    Generic = NSData.FromString(iOSBrokerConstants.LocalSettingsContainerName),
+                    Service = iOSBrokerConstants.BrokerKeyService,
+                    Account = iOSBrokerConstants.BrokerKeyAccount,
+                    Label = iOSBrokerConstants.BrokerKeyLabel,
+                    Comment = iOSBrokerConstants.BrokerKeyComment,
+                    Description = iOSBrokerConstants.BrokerKeyStorageDescription,
                     ValueData = byteData
                 };
 
                 var result = SecKeyChain.Add(record);
                 if (result != SecStatusCode.Success)
                 {
-                    //CoreLoggerBase.Default.Warning("Failed to save broker key. Security Keychain Status code: " + result);
+                    logger.Info(string.Format( CultureInfo.InvariantCulture, iOSBrokerConstants.FailedToSaveBrokerKey + result));
                 }
 
                 brokerKey = byteData.ToArray();
@@ -94,14 +84,14 @@ namespace Microsoft.Identity.Client.Platforms.iOS
             return brokerKey;
         }
         
-        internal static string DecryptBrokerResponse(String encryptedBrokerResponse)
+        internal static string DecryptBrokerResponse(string encryptedBrokerResponse, ICoreLogger logger)
         {
             byte[] outputBytes = Base64UrlHelpers.DecodeToBytes(encryptedBrokerResponse);
             string plaintext = string.Empty;
             
             using (MemoryStream memoryStream = new MemoryStream(outputBytes))
             {
-                byte[] key = GetRawBrokerKey();
+                byte[] key = GetRawBrokerKey(logger);
 
                 AesManaged algo = GetCryptoAlgorithm(key);
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, algo.CreateDecryptor(), CryptoStreamMode.Read))

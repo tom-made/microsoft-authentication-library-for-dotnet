@@ -29,23 +29,18 @@ using Microsoft.Identity.Client.ApiConfig.Parameters;
 using Microsoft.Identity.Client.Core;
 using Microsoft.Identity.Client.Internal.Broker;
 using Microsoft.Identity.Client.Utils;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.Identity.Client.Internal.Requests
 {
     internal class BrokerInteractiveRequest : RequestBase
-    {
-        private readonly IServiceBundle _serviceBundle;
-        protected IBroker BrokerHelper { get; }
-
+    {    
         BrokerFactory brokerFactory = new BrokerFactory();
 
-        public Dictionary<string, string> _brokerParameters = new Dictionary<string, string>();
+        public Dictionary<string, string> _brokerPayload = new Dictionary<string, string>();
+        protected IBroker BrokerHelper { get; }
 
         public BrokerInteractiveRequest(
            IServiceBundle serviceBundle,
@@ -53,23 +48,23 @@ namespace Microsoft.Identity.Client.Internal.Requests
            AcquireTokenByBrokerParameters brokerParameters)
            : base(serviceBundle, authenticationRequestParameters, brokerParameters)
         {
-            BrokerHelper = brokerFactory.CreateBrokerFacade();
-            _brokerParameters = brokerParameters.BrokerPayload;
+            BrokerHelper = brokerFactory.CreateBrokerFacade(ServiceBundle.DefaultLogger);
+            _brokerPayload = brokerParameters.BrokerPayload;
 
-            _brokerParameters.Add(BrokerParameter.Authority, authenticationRequestParameters.Authority.AuthorityInfo.CanonicalAuthority);
+            _brokerPayload.Add(BrokerParameter.Authority, authenticationRequestParameters.Authority.AuthorityInfo.CanonicalAuthority);
             string scopes = ScopeHelper.ConvertSortedSetScopesToString(authenticationRequestParameters.Scope);
 
-            _brokerParameters.Add(BrokerParameter.RequestScopes, scopes);
-            _brokerParameters.Add(BrokerParameter.ClientId, authenticationRequestParameters.ClientId);
-            _brokerParameters.Add(BrokerParameter.CorrelationId, ServiceBundle.DefaultLogger.CorrelationId.ToString());
-            _brokerParameters.Add(BrokerParameter.ClientVersion, MsalIdHelper.GetMsalVersion());
-            _brokerParameters.Add(BrokerParameter.Force, "NO");
-            _brokerParameters.Add(BrokerParameter.RedirectUri, authenticationRequestParameters.RedirectUri.AbsoluteUri);
+            _brokerPayload.Add(BrokerParameter.RequestScopes, scopes);
+            _brokerPayload.Add(BrokerParameter.ClientId, authenticationRequestParameters.ClientId);
+            _brokerPayload.Add(BrokerParameter.CorrelationId, ServiceBundle.DefaultLogger.CorrelationId.ToString());
+            _brokerPayload.Add(BrokerParameter.ClientVersion, MsalIdHelper.GetMsalVersion());
+            _brokerPayload.Add(BrokerParameter.Force, "NO");
+            _brokerPayload.Add(BrokerParameter.RedirectUri, authenticationRequestParameters.RedirectUri.AbsoluteUri);
 
             //string extraQP = string.Join("&", authenticationRequestParameters.ExtraQueryParameters.Select(x => x.Key + "=" + x.Value.ToString()));
             //_brokerParameters.BrokerPayload.Add(BrokerParameter.ExtraQp, extraQP);
-            _brokerParameters.Add(BrokerParameter.Username, authenticationRequestParameters.Account?.Username ?? string.Empty);
-            _brokerParameters.Add(BrokerParameter.ExtraOidcScopes, BrokerParameter.OidcScopesValue);
+            _brokerPayload.Add(BrokerParameter.Username, authenticationRequestParameters.Account?.Username ?? string.Empty);
+            _brokerPayload.Add(BrokerParameter.ExtraOidcScopes, BrokerParameter.OidcScopesValue);
         }
 
 
@@ -77,7 +72,7 @@ namespace Microsoft.Identity.Client.Internal.Requests
         {
             await ResolveAuthorityEndpointsAsync().ConfigureAwait(false);
 
-            await BrokerHelper.AcquireTokenUsingBrokerAsync(_brokerParameters, _serviceBundle).ConfigureAwait(false);
+            await BrokerHelper.AcquireTokenUsingBrokerAsync(_brokerPayload, ServiceBundle).ConfigureAwait(false);
 
             var msalTokenResponse = await SendTokenRequestAsync(null, cancellationToken)
                                         .ConfigureAwait(false);
